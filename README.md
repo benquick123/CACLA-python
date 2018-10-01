@@ -14,3 +14,5 @@ just to learn the arm based on simple input (e.g. sphere coordinates relative to
 have to do) will take care fo the rest?
 - Is feedback arm or camera driven? What I mean by that is if we should observe arm location based on camera input or 
 arm position (or maybe both)?
+- Should we use the actual robotic arm that will be used in experiments?
+
