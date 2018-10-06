@@ -24,7 +24,7 @@ TO-DO list:
 - implement test arm movements. Take a look at RemoteAPI functions *simxSetJointPosition* and *simxSetJointTargetPosition*.
 Checking script that is prewritten for the robotic arm on scene could also be useful. One thing to figure out 
 might also be the principle upon which arm actually moves. Is it necessary to start a simulation first or not? How would the 
-simulation workflow look like?
+simulation workflow look like? Checking the code provided by Farkaš might also help answer some of these questions.
 - check out the papers Farkaš sent and implement the algorithm. It might be a good idea to check out some libraries 
 that are capable of reinforcement learning.
 
