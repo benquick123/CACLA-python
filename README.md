@@ -28,3 +28,15 @@ simulation workflow look like? Checking the code provided by Farkaš might also 
 - check out the papers Farkaš sent and implement the algorithm. It might be a good idea to check out some libraries 
 that are capable of reinforcement learning.
 
+<b> New questions </b>
+
+There are 2 new files available. File *cacla.py* consists of main program and learning algorithm, while *arm.py*
+implements code needed for manipulation of the arm. 
+
+While reading and transforming the CACLA code, following questions emerged:
+- There may be a need to clarify what discount function is. 
+- State vs. Change distinction?
+
+I haven't fully gotten the code yet, so I don't know when TODOs added will need to be implemented. 
+I also removed all 1D and 2D functions to remove clutter. Additional code cleaning might still be necessary.
+
