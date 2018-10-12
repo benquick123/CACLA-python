@@ -13,16 +13,18 @@ else:
     sys.exit("Could not connect")
 
 
-ec1, motor1_handle = vrep.simxGetObjectHandle(clientID, 'uarm_motor1', vrep.simx_opmode_oneshot_wait)
-ec2, motor2_handle = vrep.simxGetObjectHandle(clientID, 'uarm_motor2', vrep.simx_opmode_oneshot_wait)
-ec3, motor3_handle = vrep.simxGetObjectHandle(clientID, 'uarm_motor3', vrep.simx_opmode_oneshot_wait)
-ec4, motor4_handle = vrep.simxGetObjectHandle(clientID, 'uarm_motor4', vrep.simx_opmode_oneshot_wait)
+ec1, motor1_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint1', vrep.simx_opmode_oneshot_wait)
+ec2, motor2_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint2', vrep.simx_opmode_oneshot_wait)
+ec3, motor3_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint3', vrep.simx_opmode_oneshot_wait)
+ec4, motor4_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint4', vrep.simx_opmode_oneshot_wait)
 ec5, auxMotor2_handle = vrep.simxGetObjectHandle(clientID, 'uarm_auxMotor2', vrep.simx_opmode_oneshot_wait)
 ec6, gripperMotor2_handle = vrep.simxGetObjectHandle(clientID, 'uarmGripper_motor2Method2', vrep.simx_opmode_oneshot_wait)
 
-vrep.simxSetJointTargetPosition(clientID, motor1_handle, pi, vrep.simx_opmode_oneshot) #rotates motor1, takes radians, default is at pi/2
-vrep.simxSetJointTargetPosition(clientID, motor2_handle, 1, vrep.simx_opmode_oneshot)# motor2 and 3 work simultaneously
-##
+#vrep.simxSetJointTargetPosition(clientID, motor1_handle, pi, vrep.simx_opmode_oneshot) #rotates motor1, takes radians, default is at pi/2
+#vrep.simxSetJointTargetPosition(clientID, motor2_handle, 1, vrep.simx_opmode_blocking)# motor2 and 3 work simultaneously
+#vrep.simxSetJointPosition(clientID, motor2_handle, 0.5, vrep.simx_opmode_oneshot)
+vrep.simxSetJointPosition(clientID, motor3_handle, 1, vrep.simx_opmode_oneshot)
+
 
 """
 #If not sure about commands being received, add a 'pioneer p3dx' to the scene and run this.
@@ -32,3 +34,4 @@ vrep.simxSetJointTargetVelocity(clientID, left_motor_handle, 0.2, vrep.simx_opmo
 """
 
 time.sleep(1)
+vrep.simxFinish(clientID)
