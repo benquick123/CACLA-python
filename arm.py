@@ -20,14 +20,14 @@ class ArmController:
     def train(self, n_iterations):
         pass
 
-    def joints_move(self):
+    def joints_move(self, target_position):
         pass
 
     def joints_position(self):
         pass
 
     def get_distance(self):
-        pass
+        return 0
 
 
 
