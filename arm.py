@@ -11,6 +11,12 @@ class ArmController:
         self.obj = None                 # self._get_handle('Sphere')
         self.tip = None                 # self._get_handle('redundantRob_manipSphere')
 
+    def reset_arm_position(self):
+        pass
+
+    def reset_object_position(self):
+        pass
+
     def train(self, n_iterations):
         pass
 
