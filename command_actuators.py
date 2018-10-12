@@ -22,7 +22,7 @@ ec6, gripperMotor2_handle = vrep.simxGetObjectHandle(clientID, 'uarmGripper_moto
 
 vrep.simxSetJointTargetPosition(clientID, motor1_handle, pi, vrep.simx_opmode_oneshot) #rotates motor1, takes radians, default is at pi/2
 vrep.simxSetJointTargetPosition(clientID, motor2_handle, 1, vrep.simx_opmode_oneshot)# motor2 and 3 work simultaneously
-
+##
 
 """
 #If not sure about commands being received, add a 'pioneer p3dx' to the scene and run this.
