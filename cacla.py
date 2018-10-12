@@ -5,9 +5,6 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense
 
-from arm import ArmController
-
-
 class Cacla:
     def __init__(self, arm, input_dim, output_dim, n_actor_neurons, n_critic_neurons, alpha, gamma, exploration_probability):
         self.arm = arm
@@ -29,9 +26,9 @@ class Cacla:
         state_vect_t1 = np.reshape(np.append(state_vect_t0[0][:3], a), (1, -1))
         A_t1 = self.actor.predict(state_vect_t1, batch_size=1)
 
-        arm.joints_move(A_t1)
-        r_t1 = arm.get_distance()
-        arm.joints_move(A_t0)
+        self.arm.joints_move(A_t1)
+        r_t1 = self.arm.get_distance()
+        self.arm.joints_move(A_t0)
 
         V_t0 = self.critic.predict(state_vect_t0, batch_size=1)[0][0]
         V_t1 = self.critic.predict(state_vect_t1, batch_size=1)[0][0]
@@ -41,9 +38,9 @@ class Cacla:
 
         if delta > 0:
             self.actor.fit(state_vect_t1, A_t1, batch_size=1)
-            arm.joints_move(A_t1)
+            self.arm.joints_move(A_t1)
 
-            if arm.get_distance() < 0.01:                       # if distance is smaller than 1 cm
+            if self.arm.get_distance() < 0.01:                       # if distance is smaller than 1 cm
                 return 0, state_vect_t1                         # 0 = "done"
             return 1, state_vect_t1                             # 1 = "in progress"
 
@@ -53,8 +50,10 @@ class Cacla:
         for i in range(max_iter):
             train_state, state_vect = self.fit(state_vect, exploration_factor)
             if train_state == 0:
-                return 0                                        # succesful reach
-        return -1                                               # unsuccesful reach
+                print("Reached in", i, "iterations.")
+                return 0                                        # successful reach
+        print("Reach unsuccessful.")
+        return -1                                               # unsuccessful reach
 
     @staticmethod
     def _choose_action(action, explore):
@@ -83,14 +82,4 @@ class Cacla:
 
 
 if __name__ == '__main__':
-    arm = ArmController(-1)
-    input_dim = 9
-    output_dim = 6
-    n_neurons_actor = 100
-    n_neurons_critic = 100
-    alpha = 0.1                                                                 # learning rate for neural network
-    gamma = 0.5                                                                 # discount factor
-    exploration_probability = 1.0
-    cacla = Cacla(arm, input_dim, output_dim, n_neurons_actor, n_neurons_critic, alpha, gamma, exploration_probability)
-    cacla.fit_iter(np.array([[1, 1, 1, 0, 0, 0, 0, 0, 0]]), 1.0, 50)
     exit()

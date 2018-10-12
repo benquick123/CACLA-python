@@ -5,8 +5,6 @@ import time
 import math
 
 
-clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
-
 class ArmController:
     def __init__(self, clientID):
         self.clientID = clientID
@@ -23,7 +21,7 @@ class ArmController:
         x, y, z = 0, 0, 0.0250
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
 
-    def train(self, n_iterations):
+    def train(self, model, n_iterations):
         pass
 
     def joints_move(self, array):
@@ -46,10 +44,14 @@ class ArmController:
         return math.sqrt(pow((xa - xb), 2) + pow((ya - yb), 2) + pow((za - zb), 2))
 
 
-arm = ArmController(clientID)
-arm.reset_object_position()
-arm.joints_move([0,1,-1,0])
-print(arm.get_distance())
+if __name__ == "__main__":
+    clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
+    arm = ArmController(clientID)
+    arm.reset_object_position()
+    arm.joints_move([0,1,-1,0])
+    print(arm.get_distance())
 
-time.sleep(1)
-vrep.simxFinish(clientID)
+    time.sleep(1)
+    vrep.simxFinish(clientID)
+
+    exit()
