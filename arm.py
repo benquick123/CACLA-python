@@ -29,9 +29,14 @@ class ArmController:
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
 
     def train(self, model, n_epochs, max_iter, exploration_factor):
-        # state_vect = get state vector
-        # if it makes more sense for you, you can also move this function to main.py
-        model.fit_iter(np.array([[1, 1, 1, 0, 0, 0, 0, 0, 0]]), exploration_factor, max_iter)
+        for n in range(n_epochs):
+            state_vect = [0, 0, 0, 0, 0]
+            _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
+            # if it makes more sense for you, you can also move this function to main.py
+            ef = exploration_factor * (1 - n / n_epochs)
+            model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
+            self.reset_object_position()
+            time.sleep(1)
         pass
 
     def joints_move(self, joint_angles):
@@ -39,7 +44,8 @@ class ArmController:
         _, joint2_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint2', vrep.simx_opmode_oneshot_wait)
         _, joint3_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint3', vrep.simx_opmode_oneshot_wait)
         _, joint4_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint4', vrep.simx_opmode_oneshot_wait)
-        handles = [joint1_handle, joint2_handle, joint3_handle, joint4_handle]
+        _, joint5_handle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_joint5', vrep.simx_opmode_oneshot_wait)
+        handles = [joint1_handle, joint2_handle, joint3_handle, joint4_handle, joint5_handle]
         for angle, handle in zip(joint_angles, handles):
             vrep.simxSetJointPosition(clientID, handle, angle, vrep.simx_opmode_oneshot)
 
