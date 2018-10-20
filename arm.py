@@ -16,6 +16,14 @@ class ArmController:
         _, self.objectHandle = vrep.simxGetObjectHandle(clientID, 'Sphere', vrep.simx_opmode_oneshot_wait)  # self._get_handle('Sphere')
         _, self.tip = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_gripperClose_joint', vrep.simx_opmode_oneshot_wait)  # self._get_handle('redundantRob_manipSphere')
         self.max_distance = 0.9
+        self.joint_handles = [
+            vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint1', vrep.simx_opmode_oneshot_wait)[1],
+            vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint2', vrep.simx_opmode_oneshot_wait)[1],
+            vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint3', vrep.simx_opmode_oneshot_wait)[1],
+            vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint4', vrep.simx_opmode_oneshot_wait)[1],
+            vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint5', vrep.simx_opmode_oneshot_wait)[1]
+        ]
+
 
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
@@ -41,13 +49,7 @@ class ArmController:
         pass
 
     def joints_move(self, joint_angles):
-        _, joint1_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint1', vrep.simx_opmode_oneshot_wait)
-        _, joint2_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint2', vrep.simx_opmode_oneshot_wait)
-        _, joint3_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint3', vrep.simx_opmode_oneshot_wait)
-        _, joint4_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint4', vrep.simx_opmode_oneshot_wait)
-        _, joint5_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint5', vrep.simx_opmode_oneshot_wait)
-        handles = [joint1_handle, joint2_handle, joint3_handle, joint4_handle, joint5_handle]
-        for angle, handle in zip(joint_angles, handles):
+        for angle, handle in zip(joint_angles, self.joint_handles):
             vrep.simxSetJointPosition(self.clientID, handle, angle, vrep.simx_opmode_oneshot)
 
     def joints_position(self):
