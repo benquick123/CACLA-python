@@ -3,8 +3,9 @@ import random
 import sys
 import time
 import math
+import numpy as np
 
-clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
+#clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
 
 
 class ArmController:
@@ -26,7 +27,10 @@ class ArmController:
         # x, y, z = 0, 0.25,0.0250 # Default position
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
 
-    def train(self, model, n_iterations):
+    def train(self, model, n_epochs, max_iter, exploration_factor):
+        # state_vect = get state vector
+        # if it makes more sense for you, you can also move this function to main.py
+        model.fit_iter(np.array([[1, 1, 1, 0, 0, 0, 0, 0, 0]]), exploration_factor, max_iter)
         pass
 
     def joints_move(self, joint_angles):
@@ -51,7 +55,7 @@ if __name__ == "__main__":
     clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
     arm = ArmController(clientID)
     arm.reset_object_position()
-    arm.joints_move([0, 1, -1, 0])
+    arm.joints_move([0, 0, 0, 0])
     print(arm.get_distance())
 
     time.sleep(1)

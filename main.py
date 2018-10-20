@@ -19,8 +19,11 @@ if __name__ == "__main__":
 
     arm.reset_arm_position()
 
-    n_iterations = 20000
-    arm.train(cacla, n_iterations)
+    n_epochs = 20000
+    max_iter = 100
+    exploration_factor = 1.0
+
+    arm.train(cacla, n_epochs, max_iter, exploration_factor)
 
     time.sleep(0.1)
     vrep.simxFinish(clientID)

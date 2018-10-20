@@ -1,9 +1,9 @@
 import numpy as np
-import vrep
 import keras
 
 from keras.models import Sequential
 from keras.layers import Dense
+
 
 class Cacla:
     def __init__(self, arm, input_dim, output_dim, n_actor_neurons, n_critic_neurons, alpha, gamma, exploration_probability):
@@ -40,7 +40,7 @@ class Cacla:
             self.actor.fit(state_vect_t1, A_t1, batch_size=1)
             self.arm.joints_move(A_t1)
 
-            if self.arm.get_distance() < 0.01:                       # if distance is smaller than 1 cm
+            if self.arm.get_distance() < 0.01:                  # if distance is smaller than 1 cm
                 return 0, state_vect_t1                         # 0 = "done"
             return 1, state_vect_t1                             # 1 = "in progress"
 
@@ -54,6 +54,11 @@ class Cacla:
                 return 0                                        # successful reach
         print("Reach unsuccessful.")
         return -1                                               # unsuccessful reach
+
+    def get_reward(self, distance):
+        max_distance = 2
+        rd = 1 - 2 * (distance / max_distance)
+        return -rd * np.abs(rd)
 
     @staticmethod
     def _choose_action(action, explore):
@@ -82,4 +87,6 @@ class Cacla:
 
 
 if __name__ == '__main__':
+    cacla = Cacla(None, 9, 6, 5, 5, 0.1, 0.5, 0.5)
+    cacla.fit(np.array([[1, 1, 1, 0, 0, 0, 0, 0, 0]]), 1.0)
     exit()
