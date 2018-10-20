@@ -27,7 +27,7 @@ class Cacla:
         A_t1 = self.actor.predict(state_vect_t1, batch_size=1)
 
         self.arm.joints_move(A_t1)
-        r_t1 = self.arm.get_distance()
+        r_t1 = self.get_reward()
         self.arm.joints_move(A_t0)
 
         V_t0 = self.critic.predict(state_vect_t0, batch_size=1)[0][0]
@@ -55,9 +55,8 @@ class Cacla:
         print("Reach unsuccessful.")
         return -1                                               # unsuccessful reach
 
-    def get_reward(self, distance):
-        max_distance = 2
-        rd = 1 - 2 * (distance / max_distance)
+    def get_reward(self):
+        rd = 1 - 2 * (self.arm.get_distance() / self.arm.max_distance)
         return -rd * np.abs(rd)
 
     @staticmethod

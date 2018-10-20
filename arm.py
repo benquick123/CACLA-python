@@ -15,6 +15,7 @@ class ArmController:
         _, self.armHandle = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher', vrep.simx_opmode_oneshot_wait)
         _, self.objectHandle = vrep.simxGetObjectHandle(clientID, 'Sphere', vrep.simx_opmode_oneshot_wait)  # self._get_handle('Sphere')
         _, self.tip = vrep.simxGetObjectHandle(clientID, 'PhantomXPincher_gripperClose_joint', vrep.simx_opmode_oneshot_wait)  # self._get_handle('redundantRob_manipSphere')
+        self.max_distance = 0.87
 
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
     arm = ArmController(clientID)
     arm.reset_object_position()
-    arm.joints_move([0, 0, 0, 0])
+    arm.joints_move([0, np.pi/2, 0, 0])
     print(arm.get_distance())
 
     time.sleep(1)
