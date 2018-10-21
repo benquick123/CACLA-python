@@ -24,10 +24,9 @@ class ArmController:
             vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_joint5', vrep.simx_opmode_oneshot_wait)[1]
         ]
 
-
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
-        self.joints_move([0, 0, 0, 0, 0])
+        self.joints_move([0.5] * 5)
 
     def reset_object_position(self):
         x = random.randrange(-100, 100) / 1000
@@ -38,19 +37,19 @@ class ArmController:
 
     def train(self, model, n_epochs, max_iter, exploration_factor):
         for n in range(n_epochs):
-            state_vect = [0, 0, 0, 0, 0]
+            state_vect = [0.5] * 5
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
             # if it makes more sense for you, you can also move this function to main.py
             ef = exploration_factor * (1 - n / n_epochs)
             model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
             self.reset_object_position()
             self.reset_arm_position()
-            time.sleep(1)
+            time.sleep(3)
         pass
 
     def joints_move(self, joint_angles):
         for angle, handle in zip(joint_angles, self.joint_handles):
-            vrep.simxSetJointPosition(self.clientID, handle, angle, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointPosition(self.clientID, handle, (angle * 2 * math.pi) - math.pi, vrep.simx_opmode_oneshot)
 
     def joints_position(self):
         pass
