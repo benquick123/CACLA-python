@@ -34,10 +34,16 @@ class ArmController:
                                                 vrep.simx_opmode_blocking)[1] > -0.0423
 
     def reset_object_position(self):
+        # x, y, z = 0, 0.25,0.0250 # Default position
+        """
         x = random.randrange(-100, 100) / 1000
         y = random.randrange(200, 300) / 1000
+        """
+        alpha = 2 * math.pi * random.random()
+        r = 0.25
+        x = r * math.cos(alpha)
+        y = r * math.sin(alpha)
         z = 0.0250
-        # x, y, z = 0, 0.25,0.0250 # Default position
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
 
     def train(self, model, n_epochs, max_iter, exploration_factor):
