@@ -28,6 +28,10 @@ class ArmController:
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
         self.joints_move([0.5] * 5)
 
+    def above_floor(self):
+        return vrep.simxGetObjectFloatParameter(self.clientID, self.armHandle, vrep.sim_objfloatparam_modelbbox_min_z,
+                                                vrep.simx_opmode_blocking)[1] > -0.0423
+
     def reset_object_position(self):
         x = random.randrange(-100, 100) / 1000
         y = random.randrange(200, 300) / 1000
