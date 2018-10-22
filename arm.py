@@ -29,6 +29,7 @@ class ArmController:
         self.joints_move([0.5] * 5)
 
     def above_floor(self):
+        # CAUTION: Only works if bounding box of the object has an absolute reference (Edit > Reorient bbox > world)
         return vrep.simxGetObjectFloatParameter(self.clientID, self.armHandle, vrep.sim_objfloatparam_modelbbox_min_z,
                                                 vrep.simx_opmode_blocking)[1] > -0.0423
 
@@ -54,6 +55,10 @@ class ArmController:
     def joints_move(self, joint_angles):
         for angle, handle in zip(joint_angles, self.joint_handles):
             vrep.simxSetJointPosition(self.clientID, handle, (angle * 2 * math.pi) - math.pi, vrep.simx_opmode_oneshot)
+
+    def joints_move_to_target(self, joint_angles):
+        for angle, handle in zip(joint_angles, self.joint_handles):
+            vrep.simxSetJointTargetPosition(self.clientID, handle, (angle * 2 * math.pi) - math.pi, vrep.simx_opmode_oneshot)
 
     def joints_position(self):
         pass
