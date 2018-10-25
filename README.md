@@ -40,3 +40,18 @@ While reading and transforming the CACLA code, following questions emerged:
 I haven't fully gotten the code yet, so I don't know when TODOs added will need to be implemented. 
 I also removed all 1D and 2D functions to remove clutter. Additional code cleaning might still be necessary.
 
+<b> Some new literature </b>
+
+- https://web.stanford.edu/group/pdplab/pdphandbook/handbookch10.html
+- https://github.com/dennybritz/reinforcement-learning
+- https://github.com/keras-rl/keras-rl
+- http://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
+- https://towardsdatascience.com/reinforcement-learning-w-keras-openai-actor-critic-models-f084612cfd69
+
+But so far this has been most useful considering manually updating network weights:
+- https://medium.com/@dhruvp/how-to-write-a-neural-network-to-play-pong-from-scratch-956b57d4f6e0
+- https://towardsdatascience.com/reinforcement-learning-w-keras-openai-actor-critic-models-f084612cfd69
+
+Questions:
+- When exactly does training occur? (After arm gets to terminal state?)
+- Are the delta and a_t1 - A_t0 basically just loss functions?

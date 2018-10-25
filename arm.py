@@ -3,6 +3,7 @@ import random
 import sys
 import time
 import math
+import pickle
 import numpy as np
 
 #clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
@@ -27,6 +28,7 @@ class ArmController:
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
         self.joints_move([0.5] * 5)
+        return [0.5] * 5
 
     def above_floor(self):
         # CAUTION: Only works if bounding box of the object has an absolute reference (Edit > Reorient bbox > world)
@@ -34,17 +36,18 @@ class ArmController:
                                                 vrep.simx_opmode_blocking)[1] > -0.0423
 
     def reset_object_position(self):
-        # x, y, z = 0, 0.25,0.0250 # Default position
+        x, y, z = 0, 0.25,0.0250 # Default position
         """
         x = random.randrange(-100, 100) / 1000
         y = random.randrange(200, 300) / 1000
         """
-        alpha = 2 * math.pi * random.random()
+        """alpha = 2 * math.pi * random.random()
         r = 0.25
         x = r * math.cos(alpha)
         y = r * math.sin(alpha)
-        z = 0.0250
+        z = 0.0250"""
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
+        return x, y, z
 
     def train(self, model, n_epochs, max_iter, exploration_factor):
         for n in range(n_epochs):
@@ -52,7 +55,9 @@ class ArmController:
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
             # if it makes more sense for you, you can also move this function to main.py
             ef = exploration_factor * (1 - n / n_epochs)
-            model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
+            val = model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
+            if val == 0:
+                pickle.dump(model, open("model_object.pickle", "wb"))
             self.reset_object_position()
             self.reset_arm_position()
             time.sleep(3)
