@@ -21,14 +21,14 @@ if __name__ == "__main__":
     input_dim = 8
     output_dim = 5
     alpha = 0.001                                                                # learning rate for actor
-    beta = 0.001                                                                  # learning rate for critic
+    beta = 0.001                                                                 # learning rate for critic
     gamma = 0.9                                                                  # discount factor
     exploration_probability = 0.2
-    # cacla = Cacla(arm, input_dim, output_dim, alpha, beta, gamma, exploration_probability)
-    cacla = pickle.load(open("model_object.pickle", "rb"))
-    cacla.arm.reset_arm_position()
-    cacla.predict(np.array([[0, 0.25, 0.0250, 0.0, 0.0, 0.0, 0.0, 0.0]]))
-    time.sleep(30)
+    cacla = Cacla(arm, input_dim, output_dim, alpha, beta, gamma, exploration_probability)
+    # cacla = pickle.load(open("model_object.pickle", "rb"))
+    # cacla.arm.reset_arm_position()
+    # cacla.predict(np.array([[0, 0.25, 0.0250, 0.0, 0.0, 0.0, 0.0, 0.0]]))
+    # time.sleep(30)
 
     arm.reset_arm_position()
 
