@@ -7,15 +7,15 @@ from keras.layers import Dense
 
 
 class Cacla:
-    def __init__(self, arm, input_dim, output_dim, n_actor_neurons, n_critic_neurons, alpha, gamma, exploration_probability):
+    def __init__(self, arm, input_dim, output_dim, alpha, beta, gamma, exploration_probability):
         self.arm = arm
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.gamma = gamma
         self.exploration_probability = exploration_probability
 
-        self.actor = self._create_actor(input_dim, output_dim, n_actor_neurons, alpha)
-        self.critic = self._create_critic(input_dim, 1, n_critic_neurons, alpha)
+        self.actor = self._create_actor(input_dim, output_dim, alpha)
+        self.critic = self._create_critic(input_dim, 1, beta)
 
     def fit(self, state_vect_t0, exploration_factor):
         # for now exploration will be linear function
@@ -61,9 +61,10 @@ class Cacla:
 
         return 1, state_vect_t0                                 # 1 = "in progress"
 
-    def predict(self, state_vect_t0):
-        A = self.arm.predict(state_vect_t0)
-        self.arm.joints_move(A)
+    def predict(self, state_vect_t0, move=True):
+        A = self.actor.predict(state_vect_t0)
+        if move:
+            self.arm.joints_move(A[0])
 
     def fit_iter(self, state_vect, exploration_factor, max_iter):
         for i in range(max_iter):
@@ -79,33 +80,39 @@ class Cacla:
         return -1                                               # unsuccessful reach
 
     def get_reward(self):
-        rd = 1 - (self.arm.get_distance() / self.arm.max_distance)
         rd = 1 - 2 * (self.arm.get_distance() / self.arm.max_distance)
         return rd * np.abs(rd)
 
     @staticmethod
     def _choose_action(action, explore):
         e = [np.random.normal() * explore for i in range(len(action))]
-        return action + e
+        a = action + e
+        a[a > 1] = 1
+        a[a < -1] = -1
+        return a
 
     @staticmethod
-    def _create_actor(input_dim, output_dim, n_neurons, learning_rate):
+    def _create_actor(input_dim, output_dim, learning_rate):
         model = Sequential()
-        model.add(Dense(n_neurons, input_dim=input_dim, activation="sigmoid"))
-        model.add(Dense(output_dim, activation='sigmoid'))
+        model.add(Dense(24, input_dim=input_dim, activation="relu"))
+        model.add(Dense(24, activation="relu"))
+        model.add(Dense(output_dim, activation='linear'))
 
-        sgd = keras.optimizers.SGD(lr=learning_rate)
-        model.compile(loss='mean_squared_error', optimizer=sgd)
+        adam = keras.optimizers.Adam(lr=learning_rate)
+        sgd = keras.optimizers.sgd(lr=learning_rate)
+        model.compile(loss='mean_squared_error', optimizer=adam)
         return model
 
     @staticmethod
-    def _create_critic(input_dim, output_dim, n_neurons, learning_rate):
+    def _create_critic(input_dim, output_dim, learning_rate):
         model = Sequential()
-        model.add(Dense(n_neurons, input_dim=input_dim, activation="sigmoid"))
-        model.add(Dense(output_dim))
+        model.add(Dense(24, input_dim=input_dim, activation="relu"))
+        model.add(Dense(24, activation="relu"))
+        model.add(Dense(output_dim, activation="linear"))
 
-        sgd = keras.optimizers.SGD(lr=learning_rate)
-        model.compile(loss='mean_squared_error', optimizer=sgd)
+        adam = keras.optimizers.Adam(lr=learning_rate)
+        sgd = keras.optimizers.sgd(lr=learning_rate)
+        model.compile(loss='mean_squared_error', optimizer=adam)
         return model
 
 

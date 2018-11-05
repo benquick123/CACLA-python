@@ -27,8 +27,8 @@ class ArmController:
 
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
-        self.joints_move([0.5] * 5)
-        return [0.5] * 5
+        self.joints_move([0.0] * 5)
+        return [0.0] * 5
 
     def above_floor(self):
         # CAUTION: Only works if bounding box of the object has an absolute reference (Edit > Reorient bbox > world)
@@ -36,40 +36,40 @@ class ArmController:
                                                 vrep.simx_opmode_blocking)[1] > -0.0423
 
     def reset_object_position(self):
-        x, y, z = 0, 0.25,0.0250 # Default position
+        # x, y, z = 0, 0.25, 0.0250                   # Default position
         """
         x = random.randrange(-100, 100) / 1000
         y = random.randrange(200, 300) / 1000
         """
-        """alpha = 2 * math.pi * random.random()
-        r = 0.25
+        alpha = 2 * math.pi * random.random()
+        r = 0.2
         x = r * math.cos(alpha)
         y = r * math.sin(alpha)
-        z = 0.0250"""
+        z = 0.0250
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
         return x, y, z
 
     def train(self, model, n_epochs, max_iter, exploration_factor):
         for n in range(n_epochs):
-            state_vect = [0.5] * 5
+            state_vect = [0.0] * 5
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
             # if it makes more sense for you, you can also move this function to main.py
             ef = exploration_factor * (1 - n / n_epochs)
             val = model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
             if val == 0:
                 pickle.dump(model, open("model_object.pickle", "wb"))
-            self.reset_object_position()
+                self.reset_object_position()
             self.reset_arm_position()
             time.sleep(3)
         pass
 
     def joints_move(self, joint_angles):
         for angle, handle in zip(joint_angles, self.joint_handles):
-            vrep.simxSetJointPosition(self.clientID, handle, (angle * 2 * math.pi) - math.pi, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointPosition(self.clientID, handle, (angle * math.pi), vrep.simx_opmode_oneshot)
 
     def joints_move_to_target(self, joint_angles):
         for angle, handle in zip(joint_angles, self.joint_handles):
-            vrep.simxSetJointTargetPosition(self.clientID, handle, (angle * 2 * math.pi) - math.pi, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointTargetPosition(self.clientID, handle, (angle * math.pi), vrep.simx_opmode_oneshot)
 
     def joints_position(self):
         pass

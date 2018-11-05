@@ -55,3 +55,11 @@ But so far this has been most useful considering manually updating network weigh
 Questions:
 - When exactly does training occur? (After arm gets to terminal state?)
 - Are the delta and a_t1 - A_t0 basically just loss functions?
+
+<b> Training works again, but still has some issues </b>
+
+So, training is working again, but I still have few issues and improvements:
+- Make exploration smaller as the arm gets closer to the object. That way, arm will be able to fine-tune faster and won't lose so much 
+time with exploration while the object is right next to it.
+- Make sure the arm doesn't fold into itself. That happends because the arm finds the local optima that way and can't 
+get out of it no matter how many trials it makes.
