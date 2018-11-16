@@ -43,25 +43,32 @@ class ArmController:
         """
         alpha = 2 * math.pi * random.random()
         r = 0.2
-        x = r * math.cos(alpha)
-        y = r * math.sin(alpha)
+        x = abs(r * math.cos(alpha))
+        y = abs(r * math.sin(alpha))
         z = 0.0250
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
         return x, y, z
 
-    def train(self, model, n_epochs, max_iter, exploration_factor):
+    def train(self, model, n_epochs, max_iter, learning_decay, exploration_factor, log=None):
         for n in range(n_epochs):
+
+            if log is not None:
+                log.log("********************************************* EPOCH:" + str(n) + "*********************************************")
+
             state_vect = [0.0] * 5
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
             # if it makes more sense for you, you can also move this function to main.py
             ef = exploration_factor * (1 - n / n_epochs)
-            val = model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter)
+            val = model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter, learning_decay, log)
+
             if val == 0:
                 pickle.dump(model, open("model_object.pickle", "wb"))
-                self.reset_object_position()
+            self.reset_object_position()
             self.reset_arm_position()
-            time.sleep(3)
-        pass
+
+            if log is not None:
+                log.write()
+            # time.sleep(1)
 
     def joints_move(self, joint_angles):
         for angle, handle in zip(joint_angles, self.joint_handles):

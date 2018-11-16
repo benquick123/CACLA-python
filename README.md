@@ -63,3 +63,11 @@ So, training is working again, but I still have few issues and improvements:
 time with exploration while the object is right next to it.
 - Make sure the arm doesn't fold into itself. That happends because the arm finds the local optima that way and can't 
 get out of it no matter how many trials it makes.
+- Should I perform an explored action or predicted action after actor.fit()?
+- Should the arm get closer to the object with every iteration. If I, for instance have a perfect critic, then the 
+value it returns is only positive when future state (facilitated by action) is better then the current state. 
+Or does critic have a different role? Maybe it is just evaluating if random explored action is better than default
+action actor would execute. But in that case, how does it acomplish that? Giving it another thought, I would
+say it's the second one.
+- Does the actor perform action every time, and the action solely depends on which one it makes; explored one if 
+exploration was better, instead the default one? 
