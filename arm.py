@@ -36,42 +36,52 @@ class ArmController:
         return vrep.simxGetObjectFloatParameter(self.clientID, self.armHandle, vrep.sim_objfloatparam_modelbbox_min_z,
                                                 vrep.simx_opmode_blocking)[1] > -0.0423
 
+    def reorient_bounding_box(self, object_handle):
+        emptyBuff = bytearray()
+        vrep.simxCallScriptFunction(self.clientID, 'remoteApiCommandServer',
+                                    vrep.sim_scripttype_customizationscript,
+                                    'reorientShapeBoundingBox',
+                                    [object_handle, -1, 0],
+                                    [], [], emptyBuff,
+                                    vrep.simx_opmode_blocking)
+
     def no_collision(self):
-        # Sometimes works, sometimes doesnt.... something with bounding boxes... I don't know, test before using.
+        # If it doesn't work, try commenting the 'reorient_bounding_box' calls
+        link1_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_link1_visible', vrep.simx_opmode_oneshot_wait)[1]
+        link2_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_link2_visible', vrep.simx_opmode_oneshot_wait)[1]
+        x, y, z = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)[1]
+        x1, y1, z1 = vrep.simxGetObjectPosition(self.clientID, link1_handle, -1, vrep.simx_opmode_blocking)[1]
+        x2, y2, z2 = vrep.simxGetObjectPosition(self.clientID, link1_handle, -1, vrep.simx_opmode_blocking)[1]
+        self.reorient_bounding_box(link1_handle)
+        self.reorient_bounding_box(link2_handle)
 
-        link1_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_link1', vrep.simx_opmode_oneshot_wait)[1]
-        min_x1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_x, vrep.simx_opmode_blocking)[1]
-        max_x1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_x, vrep.simx_opmode_blocking)[1]
-        min_y1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_y, vrep.simx_opmode_blocking)[1]
-        max_y1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_y, vrep.simx_opmode_blocking)[1]
-        min_z1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_z, vrep.simx_opmode_blocking)[1]
-        max_z1 = vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_z, vrep.simx_opmode_blocking)[1]
-        x1, y1, z1 = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)[1]
+        min_x1 = x1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_x, vrep.simx_opmode_blocking)[1]
+        max_x1 = x1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_x, vrep.simx_opmode_blocking)[1]
+        min_y1 = y1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_y, vrep.simx_opmode_blocking)[1]
+        max_y1 = y1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_y, vrep.simx_opmode_blocking)[1]
+        min_z1 = z1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_z, vrep.simx_opmode_blocking)[1]
+        max_z1 = z1 + vrep.simxGetObjectFloatParameter(self.clientID, link1_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_z, vrep.simx_opmode_blocking)[1]
+        min_x2 = x2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_x, vrep.simx_opmode_blocking)[1]
+        max_x2 = x2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_x, vrep.simx_opmode_blocking)[1]
+        min_y2 = y2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_y, vrep.simx_opmode_blocking)[1]
+        max_y2 = y2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_y, vrep.simx_opmode_blocking)[1]
+        min_z2 = z2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_min_z, vrep.simx_opmode_blocking)[1]
+        max_z2 = z2 + vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
+                                                       vrep.sim_objfloatparam_modelbbox_max_z, vrep.simx_opmode_blocking)[1]
 
-        link2_handle = vrep.simxGetObjectHandle(self.clientID, 'PhantomXPincher_link2', vrep.simx_opmode_oneshot_wait)[1]
-        min_x2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_x, vrep.simx_opmode_blocking)[1]
-        max_x2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_x, vrep.simx_opmode_blocking)[1]
-        min_y2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_y, vrep.simx_opmode_blocking)[1]
-        max_y2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_y, vrep.simx_opmode_blocking)[1]
-        min_z2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_min_z, vrep.simx_opmode_blocking)[1]
-        max_z2 = vrep.simxGetObjectFloatParameter(self.clientID, link2_handle,
-                                                  vrep.sim_objfloatparam_modelbbox_max_z, vrep.simx_opmode_blocking)[1]
-        x2, y2, z2 = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)[1]
-
-
-        return False if min_x1 < x1 < max_x1 and min_y1 < y1 < max_y1 and min_z1 < z1 < max_z1 \
-            or min_x2 < x2 < max_x2 and min_y2 < y2 < max_y2 and min_z2 < z2 < max_z2 else True
+        return False if min_x1 < x < max_x1 and min_y1 < y < max_y1 and min_z1 < z < max_z1 or \
+                        min_x2 < x < max_x2 and min_y2 < y < max_y2 and min_z2 < z < max_z2 else True
 
 
     def reset_object_position(self):
