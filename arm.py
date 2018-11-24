@@ -91,15 +91,16 @@ class ArmController:
         y = random.randrange(200, 300) / 1000
         """
         alpha = 2 * math.pi * random.random()
-        r = 0.2
+        r = random.uniform(0.10, 0.25)
         x = abs(r * math.cos(alpha))
         y = abs(r * math.sin(alpha))
-        z = 0.0250
+        z = 0.0125
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_blocking)
         self.object_position_history.append((x, y, z))
         return x, y, z
 
-    def train(self, model, n_epochs, max_iter, learning_decay, exploration_factor, log=None):
+    def train(self, model, n_epochs, max_iter, learning_decay, log=None):
+        exploration_decay = 1.0
         for n in range(n_epochs):
 
             if log is not None:
@@ -107,8 +108,9 @@ class ArmController:
 
             state_vect = [0.0] * 5
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
-            ef = exploration_factor * (1 - n / n_epochs)
-            val = model.fit_iter(np.array([object_vect + state_vect]), ef, max_iter, learning_decay, log)
+            # if it makes more sense for you, you can also move this function to main.py
+            ed = exploration_decay * (1 - n / n_epochs)
+            val = model.fit_iter(np.array([object_vect + state_vect]), ed, max_iter, learning_decay, log)
 
             if val == 0:
                 pickle.dump(model, open("model_object.pickle", "wb"))

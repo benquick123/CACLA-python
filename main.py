@@ -12,7 +12,7 @@ def test():
     clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
     arm = ArmController(clientID)
 
-    cacla = pickle.load(open("model_object_test_multi_loc_v2.pickle", "rb"))
+    cacla = pickle.load(open("model_object.pickle", "rb"))
     cacla.arm.reset_arm_position()
     pos = cacla.arm.reset_object_position()
     state = [list(pos) + [0.0, 0.0, 0.0, 0.0, 0.0]]
@@ -27,29 +27,37 @@ def train():
 
     input_dim = 8
     output_dim = 5
-    alpha = 0.001       # learning rate for actor
+    alpha = 0.005       # learning rate for actor
     beta = 0.01         # learning rate for critic
     gamma = 0.0         # discount factor
-    exploration_probability = 0.4
-    cacla = Cacla(arm, input_dim, output_dim, alpha, beta, gamma, exploration_probability)
+    exploration_factor = 0.35
+    cacla = Cacla(arm, input_dim, output_dim, alpha, beta, gamma, exploration_factor)
 
     log = LogToFile()
+    log.log("alpha: " + str(alpha) + ", beta: " + str(beta) + ", gamma: " + str(gamma) + ", exploration factor: " + str(exploration_factor))
 
     arm.reset_arm_position()
     arm.reset_object_position()
 
-    n_epochs = 10000
-    max_iter = 25
-    learning_decay = 0.995
-    exploration_factor = 1.0
+    n_epochs = 625
+    max_iter = 40
+    learning_decay = 0.998
 
-    arm.train(cacla, n_epochs, max_iter, learning_decay, exploration_factor, log)
+    log.log("n_epochs: " + str(n_epochs) + ", max_iter: " + str(max_iter) + ", learning decay: " + str(learning_decay))
+    log.log("comments: more positions; less iteraitons")
+    log.write()
+
+    arm.train(cacla, n_epochs, max_iter, learning_decay, log)
 
     time.sleep(0.1)
     vrep.simxFinish(clientID)
 
 
 if __name__ == "__main__":
+    for i in range(20):
+        r, _ = test()
+        print(r)
+    exit()
     train()
 
     exit()

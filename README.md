@@ -70,4 +70,10 @@ Or does critic have a different role? Maybe it is just evaluating if random expl
 action actor would execute. But in that case, how does it acomplish that? Giving it another thought, I would
 say it's the second one.
 - Does the actor perform action every time, and the action solely depends on which one it makes; explored one if 
-exploration was better, instead the default one? 
+exploration was better, instead the default one?
+
+- Penalizing worse movements
+- implementing -1 rewards
+- relative movements
+- tanh activation function
+- Plotting of positions 
