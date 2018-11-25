@@ -17,29 +17,36 @@ class Cacla:
         self.actor = self._create_actor(input_dim, output_dim, alpha)
         self.critic = self._create_critic(input_dim, 1, beta)
 
+        # initialize previous reward to minimal value
+        self.prev_reward = -1
+
     def fit(self, state_vect_t0, exploration_decay, log=None):
         # for now exploration will be linear function
         A_t0 = self.actor.predict(state_vect_t0, batch_size=1)
         A_t0 = np.array(A_t0).flatten()
         distance_decay = self.arm.get_distance() / self.arm.max_distance
-        _exploration_factor = self.exploration_factor * (0.33 * exploration_decay + 0.67 * distance_decay)
+        _exploration_factor = self.exploration_factor * (0.75 * exploration_decay + 0.25 * distance_decay)
         if log is not None:
             log.print("distance decay: " + str(distance_decay) + ", exploration_factor: " + str(_exploration_factor))
 
         a = self._choose_action(A_t0, _exploration_factor)
-        state_vect_t1 = np.reshape(np.append(state_vect_t0[0][:3], a), (1, -1))
-        # state_vect_t1[0][state_vect_t1[0] > 1] = 1
-        # state_vect_t1[0][state_vect_t1[0] < -1] = -1
+        state_vect_t1_pos_only = state_vect_t0[0][3:] + a
+        state_vect_t1_pos_only[state_vect_t1_pos_only > 1] = 1
+        state_vect_t1_pos_only[state_vect_t1_pos_only < -1] = -1
+
+        state_vect_t1 = np.reshape(np.append(state_vect_t0[0][:3], state_vect_t1_pos_only), (1, -1))
 
         if log is not None:
             pass
             # log.print("CURRENT STATE: " + str(state_vect_t0[0][3:]))
             # log.print("default action: " + str(A_t0))
-            # log.print("EXPLORING ACTION: " + str(a))
+            # log.print("exploration: " + str(a))
+            # log.print("EXPLORED ACTION: " + str(state_vect_t1_pos_only))
 
         # self.arm.joints_move(a)
-        self.arm.joints_move(a)
+        self.arm.joints_move(state_vect_t1_pos_only)
         r_t1 = self.get_reward()
+        self.prev_reward = r_t1
 
         V_t0 = self.critic.predict(state_vect_t0, batch_size=1)[0][0]
         V_t1 = self.critic.predict(state_vect_t1, batch_size=1)[0][0]
@@ -62,10 +69,10 @@ class Cacla:
                 pass
                 # log.print("-----------------------------------------UPDATING ACTOR--------------------------------------------")
                 # log.print("PERFORMED ACTION: " + str(a))
-        """else:
+        else:
             self.arm.joints_move(state_vect_t0[0][3:])
             state_vect = state_vect_t0
-            r = None"""
+            r = None
 
         if self.arm.get_distance() < 0.02:                      # if distance is smaller than 2 cm
             return 0, r, state_vect                             # 0 = "done"
@@ -92,7 +99,7 @@ class Cacla:
             if log is not None:
                 pass
                 # log.print("===================================================================================================")
-            train_state, r, _ = self.fit(state_vect, exploration_decay, log)
+            train_state, r, state_vect = self.fit(state_vect, exploration_decay, log)
             if r is not None:
                 reward.append(r)
             if train_state == 0:
@@ -112,16 +119,25 @@ class Cacla:
         return -1                                               # unsuccessful reach
 
     def get_reward(self):
-        # if not self.arm.above_floor:
-        #     return -1
         rd = 1 - 2 * (self.arm.get_distance() / self.arm.max_distance)
-        return rd * np.abs(rd)
-        # return -self.arm.get_distance()
+        rd = rd * np.abs(rd)
+
+        # if arm is not above floor, get bad reward.
+        if not self.arm.above_floor():
+            return (rd - 1) / 2
+        # arm touching itself is a sin
+        # if not self.arm.no_collision():
+        #     return (rd - 1) / 2
+        # if previous reward was better, then we need to punish this mf
+        # we punish it hard with reward on interval [-1, 0]
+        if self.prev_reward > rd:
+            return (rd - 1) / 2
+        return rd
 
     @staticmethod
     def _choose_action(action, explore):
         e = [np.random.normal() * explore for i in range(len(action))]
-        a = action + e
+        a = np.array(e)
         a[a > 1] = 1
         a[a < -1] = -1
         return a

@@ -18,7 +18,7 @@ class LogToFile:
     def __init__(self):
         colorama.init()
         now = datetime.datetime.now()
-        self.filename = "log_" + str(now.day) + str(now.month) + str(now.year) + "_ " + str(now.hour) + str(now.minute) + ".txt"
+        self.filename = "Logs/log_" + str(now.day) + str(now.month) + str(now.year) + "_ " + str(now.hour) + str(now.minute) + ".txt"
         self.text = ""
 
     def log(self, t, p=True):

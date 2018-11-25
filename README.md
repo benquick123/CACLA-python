@@ -72,8 +72,10 @@ say it's the second one.
 - Does the actor perform action every time, and the action solely depends on which one it makes; explored one if 
 exploration was better, instead the default one?
 
-- Penalizing worse movements
-- implementing -1 rewards
-- relative movements
-- tanh activation function
-- Plotting of positions 
+TODO (20. 11. 2018):
+- penalizing worse movements ✓
+- implementing -1 rewards ✓
+- relative movements ✓
+- joint restrictions ✓
+- tanh activation function (I have a very strong opinion about not doing this) ✗
+- plotting of positions ▞
