@@ -32,9 +32,12 @@ class ArmController:
         return [0.0] * 5
 
     def above_floor(self):
-        # CAUTION: Only works if bounding box of the object has an absolute reference (Edit > Reorient bbox > world)
-        return vrep.simxGetObjectFloatParameter(self.clientID, self.armHandle, vrep.sim_objfloatparam_modelbbox_min_z,
-                                                vrep.simx_opmode_blocking)[1] > -0.0423
+        # If it always returns False, print(min_z) and set the limit to that number
+        _, _, z = vrep.simxGetObjectPosition(self.clientID, self.armHandle, -1, vrep.simx_opmode_blocking)[1]
+        min_z = z + vrep.simxGetObjectFloatParameter(self.clientID, self.armHandle,
+                                                     vrep.sim_objfloatparam_modelbbox_min_z,
+                                                     vrep.simx_opmode_blocking)[1]
+        return min_z > -3e-07
 
     def reorient_bounding_box(self, object_handle):
         emptyBuff = bytearray()
