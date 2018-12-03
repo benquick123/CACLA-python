@@ -73,9 +73,34 @@ say it's the second one.
 exploration was better, instead the default one?
 
 TODO (20. 11. 2018):
-- penalizing worse movements ✓
-- implementing -1 rewards ✓
-- relative movements ✓
-- joint restrictions ✓
-- tanh activation function (I have a very strong opinion about not doing this) ✗
-- plotting of positions ▞
+-
+- <i>penalizing worse movements ✓ </i>
+
+the question is, what exactly i should do here that is not already part of the reward.
+- <i> implementing -1 rewards ✓ </i>
+
+these seem to make the problem quite harder, producing worse results when restrictions are not in place
+than otherwise. 
+- <i> relative movements ✓ </i>
+did not work at all. maybe i should first reduce the size of initial weights and then try again 
+(model converged to -1 and 1 very fast). try again after using tanh function (which by the way didn't help)
+- <i> joint restrictions ✓ </i>  
+
+did not change results in any meaningful way. 
+- <i> plotting of positions ✓ </i>
+
+done in 3D.
+
+Further improvements:
+-
+- Actor learning based on reward improvement
+
+did not yield better results, at least not at first sight. actor reaches the target object approx.
+same number of times, but performs way worse when testing position it was trained on.
+- Reduce the number of joints. See if that significantly changes the problem complexity.
+
+nope, did not change a thing. accuracy when pointing is still the same.
+- Actually use tanh function.
+
+much worse results.
+- Learning incrementaly?

@@ -10,7 +10,7 @@ import numpy as np
 def test():
     vrep.simxFinish(-1)
     clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
-    arm = ArmController(clientID)
+    arm_controller = ArmController(clientID, joint_restrictions=[[-170, 170], [-135, 135], [-135, 135], [-90, 90], [-180, 180]])
 
     cacla = pickle.load(open("model_object.pickle", "rb"))
     cacla.arm.reset_arm_position()
@@ -23,15 +23,15 @@ def test():
 def train():
     vrep.simxFinish(-1)
     clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
-    joint_restrictions = None #[[-170, 170], [-135, 135], [-135, 135], [-90, 90], [-180, 180]]
+    joint_restrictions = [[-170, 170], [-135, 135], [-135, 135], [-90, 90], [-180, 180]]
     arm = ArmController(clientID, joint_restrictions)
 
-    input_dim = 8
-    output_dim = 5
-    alpha = 0.005       # learning rate for actor
+    input_dim = 6
+    output_dim = 3
+    alpha = 0.005        # learning rate for actor
     beta = 0.01         # learning rate for critic
-    gamma = 0.8         # discount factor
-    exploration_factor = 0.5
+    gamma = 0.0         # discount factor
+    exploration_factor = 0.35
     cacla = Cacla(arm, input_dim, output_dim, alpha, beta, gamma, exploration_factor)
 
     log = LogToFile()
@@ -45,7 +45,7 @@ def train():
     learning_decay = 0.998
 
     log.log("n_epochs: " + str(n_epochs) + ", max_iter: " + str(max_iter) + ", learning decay: " + str(learning_decay))
-    log.log("comments: changed reward function to give rewards on interval [-1, 0].")
+    log.log("comments: back to normal, now with only 3 joints.")
     log.write()
 
     arm.train(cacla, n_epochs, max_iter, learning_decay, log)

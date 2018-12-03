@@ -26,6 +26,7 @@ class ArmController:
         ]
         self.object_position_history = []
         self.joint_restrictions = joint_restrictions
+        self._no_go_zone = self.no_go_zone()
 
     def reset_arm_position(self):
         vrep.simxSetObjectPosition(self.clientID, self.armHandle, -1, (0, 0, 0.042200), vrep.simx_opmode_streaming)
@@ -107,7 +108,7 @@ class ArmController:
             if log is not None:
                 log.log("*" * 45 + " EPOCH: " + str(n) + ' ' + "*" * 45)
 
-            state_vect = [0.0] * 5
+            state_vect = [0.0] * model.output_dim
             _, object_vect = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
 
             # if it makes more sense for you, you can also move this function to main.py
@@ -127,9 +128,13 @@ class ArmController:
         pickle.dump(self.object_position_history, open("object_locations.pickle", "wb"))
 
     def joints_move(self, joint_angles):
+        if len(joint_angles) == 3:
+            joint_angles = joint_angles.tolist()
+            joint_angles.append(1)
+            joint_angles.append(0)
         for i, (angle, handle) in enumerate(zip(joint_angles, self.joint_handles)):
             if self.joint_restrictions is not None:
-                _angle = angle * self.joint_restrictions[i][1]
+                _angle = angle * (self.joint_restrictions[i][1] / 180.0) * math.pi
             else:
                 _angle = angle * math.pi
             vrep.simxSetJointPosition(self.clientID, handle, _angle, vrep.simx_opmode_oneshot)
@@ -138,7 +143,7 @@ class ArmController:
         # For in-simulator movements
         for i, (angle, handle) in enumerate(zip(joint_angles, self.joint_handles)):
             if self.joint_restrictions is not None:
-                _angle = angle * self.joint_restrictions[i][1]
+                _angle = angle * (self.joint_restrictions[i][1] / 180.0) * math.pi
             else:
                 _angle = angle * math.pi
             vrep.simxSetJointTargetPosition(self.clientID, handle, _angle, vrep.simx_opmode_oneshot)
@@ -150,6 +155,9 @@ class ArmController:
         _, [xa, ya, za] = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
         _, [xb, yb, zb] = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)
         return math.sqrt(pow((xa - xb), 2) + pow((ya - yb), 2) + pow((za - zb), 2))
+
+    def get_tip_position(self):
+        return vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)[1]
 
 
 if __name__ == "__main__":
