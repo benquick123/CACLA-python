@@ -93,7 +93,7 @@ class ArmController:
         y = random.randrange(200, 300) / 1000
         """
         alpha = 2 * math.pi * random.random()
-        r = random.uniform(0.10, 0.25)
+        r = 0.2             # random.uniform(0.10, 0.25)
         x = abs(r * math.cos(alpha))
         y = abs(r * math.sin(alpha))
         z = 0.0125
@@ -128,10 +128,10 @@ class ArmController:
         pickle.dump(self.object_position_history, open("object_locations.pickle", "wb"))
 
     def joints_move(self, joint_angles):
-        if len(joint_angles) == 3:
-            joint_angles = joint_angles.tolist()
-            joint_angles.append(1)
-            joint_angles.append(0)
+        # if len(joint_angles) == 3:
+        #     joint_angles = joint_angles.tolist()
+        #     joint_angles.append(1)
+        #     joint_angles.append(0)
         for i, (angle, handle) in enumerate(zip(joint_angles, self.joint_handles)):
             if self.joint_restrictions is not None:
                 _angle = angle * (self.joint_restrictions[i][1] / 180.0) * math.pi
@@ -152,8 +152,8 @@ class ArmController:
         pass
 
     def get_distance(self):
-        _, [xa, ya, za] = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
-        _, [xb, yb, zb] = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_blocking)
+        _, [xa, ya, za] = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_oneshot)
+        _, [xb, yb, zb] = vrep.simxGetObjectPosition(self.clientID, self.tip, -1, vrep.simx_opmode_oneshot)
         return math.sqrt(pow((xa - xb), 2) + pow((ya - yb), 2) + pow((za - zb), 2))
 
     def get_tip_position(self):

@@ -104,3 +104,14 @@ nope, did not change a thing. accuracy when pointing is still the same.
 
 much worse results.
 - Learning incrementaly?
+
+Todo:
+-
+- objects in the air
+- bias to the reward
+- try tanh function
+
+did not really help with anything.
+- plot V(s)
+- try on 2d model
+- validation error

@@ -60,13 +60,13 @@ class Cacla:
             # log.print("REWARD: " + str(r_t1))
             # log.print("DELTA: " + str(delta))
 
-        self.critic.fit(state_vect_t0, [[r_t1 + self.gamma * V_t1]], verbose=0)
+        self.critic.fit(state_vect_t0, [[r_t1 + self.gamma * V_t1]], verbose=0, batch_size=1)
 
         state_vect = state_vect_t1
         r = r_t1
 
         if delta > 0:
-            self.actor.fit(state_vect_t0, np.array([a.tolist()]), verbose=0)
+            self.actor.fit(state_vect_t0, np.array([a.tolist()]), verbose=0, batch_size=1)
             if log is not None:
                 pass
                 # log.print("-----------------------------------------UPDATING ACTOR--------------------------------------------")
@@ -76,10 +76,10 @@ class Cacla:
             state_vect = state_vect_t0
             r = None
 
-        if self.arm.get_distance() < 0.02:                      # if distance is smaller than 2 cm
-            return 0, r, state_vect                             # 0 = "done"
-        else:
-            return 1, r, state_vect                             # 1 = "in progress"
+        # if self.arm.get_distance() < 0.02:                      # if distance is smaller than 2 cm
+        #     return 0, r, state_vect                             # 0 = "done"
+        # else:
+        return 1, r, state_vect                             # 1 = "in progress"
 
     def predict(self, state_vect_t0, move=True):
         A = self.actor.predict(state_vect_t0)
@@ -92,15 +92,25 @@ class Cacla:
         return A
 
     def fit_iter(self, state_vect, exploration_decay, max_iter, learning_decay, log=None):
+        """
+        :param state_vect: state vector sent from ArmController.
+        :param exploration_decay: self-explanatory.
+        :param max_iter: number of steps before finishing iteration.
+        :param learning_decay: self-explanatory.
+        :param log: log object.
+        :return: value that signifies if object was successfully reached or not.
+        """
         if log is not None:
             log.print("EXPLORATION_DECAY: " + str(exploration_decay))
             log.print("LEARNING RATE: " + str(keras.backend.get_value(self.critic.optimizer.lr)) + " (critic), " + str(keras.backend.get_value(self.actor.optimizer.lr)) + " (actor)")
 
         reward = []
         for i in range(max_iter):
+            # for every step (iteration) when reaching, do:
             if log is not None:
                 pass
                 # log.print("===================================================================================================")
+            # explore action and update critic and actor.
             train_state, r, state_vect = self.fit(state_vect, exploration_decay, log)
             if r is not None:
                 reward.append(r)
@@ -115,14 +125,23 @@ class Cacla:
             log.log("Reach unsuccessful.")
             log.log("AVERAGE REWARD: " + str(np.mean(reward)) + ".")
 
+        # update learning rates for critic and actor.
         keras.backend.set_value(self.critic.optimizer.lr, keras.backend.get_value(self.critic.optimizer.lr) * learning_decay)
         keras.backend.set_value(self.actor.optimizer.lr, keras.backend.get_value(self.actor.optimizer.lr) * learning_decay)
 
         return -1                                               # unsuccessful reach
 
     def get_reward(self):
+        """
+        Calculates reward based on current distance of the arm from the object.
+        """
+        # Reward is a quadratic function. Interval [-1, 1]
         rd = 1 - 2 * (self.arm.get_distance() / self.arm.max_distance)
         rd = rd * np.abs(rd)
+
+        # apply restrictions. Any kind of below floor activity and collision with itself results in a reward
+        # on interval [-1, 0], depending on the ditance from the object.
+        # Constant reward -1 was also tested, did not produce better results.
 
         # if arm is not above floor, get bad reward.
         if not self.arm.above_floor():
@@ -130,14 +149,16 @@ class Cacla:
         # arm touching itself is a sin
         if not self.arm.no_collision(self.arm._no_go_zone):
             return (rd - 1) / 2
-        # if previous reward was better, then we need to punish this mf
-        # we punish it hard with reward on interval [-1, 0]
-        """if self.prev_reward > rd:
-            return (rd - 1) / 2"""
         return rd
 
     @staticmethod
     def _choose_action(action, explore):
+        """
+
+        :param action: default action.
+        :param explore: exploration factor
+        :return: action centered around default action, with random normally distributed deviance.
+        """
         e = [np.random.normal() * explore for i in range(len(action))]
         a = action + e
         a[a > 1] = 1
@@ -147,8 +168,8 @@ class Cacla:
     @staticmethod
     def _create_actor(input_dim, output_dim, learning_rate):
         model = Sequential()
-        model.add(Dense(24, input_dim=input_dim, activation="relu"))
-        model.add(Dense(24, activation="relu"))
+        model.add(Dense(24, input_dim=input_dim, activation="tanh"))
+        model.add(Dense(24, activation="tanh"))
         model.add(Dense(output_dim, activation='linear'))
 
         adam = keras.optimizers.Adam(lr=learning_rate)
@@ -159,8 +180,8 @@ class Cacla:
     @staticmethod
     def _create_critic(input_dim, output_dim, learning_rate):
         model = Sequential()
-        model.add(Dense(24, input_dim=input_dim, activation="relu"))
-        model.add(Dense(24, activation="relu"))
+        model.add(Dense(24, input_dim=input_dim, activation="tanh"))
+        model.add(Dense(24, activation="tanh"))
         model.add(Dense(output_dim, activation="linear"))
 
         adam = keras.optimizers.Adam(lr=learning_rate)
