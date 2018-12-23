@@ -70,7 +70,6 @@ def run_episode(model, scaler, animate=False):
                 "reward": reward, "delta": delta[0][0]}
         trajectory.append(step)
         # print("OBSERVATION AT END", observation0.tolist())
-        # input()
         # if iteration_n >= 50:
         #     break
         # iteration_n += 1
@@ -200,12 +199,12 @@ def test(model, n):
             action = model.actor.predict(np.array([observation]))
 
             observation, reward, done, info = model.env.step(action[0], absolute=True)
-            print("iteration:", i, "reward:", reward, "distance:", info["distance"])
+            print("iteration:", i, "reward:", reward, "distance:", info["distance"], "done:", done)
         time.sleep(3)
 
 
 if __name__ == "__main__":
-    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/Test/log-files/V-rep_ARM/Dec-18_19.07.05/model.pickle", "rb"))
+    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/Test/log-files/V-rep_ARM/Dec-19_02.38.42/model.pickle", "rb"))
     # test(cacla, 20)
     # exit()
 
@@ -219,7 +218,7 @@ if __name__ == "__main__":
     lr_decay = 1.0   # lr decay
     exploration_decay = 0.997   # exploration decay
     gamma = 0.0  # discount factor
-    exploration_factor = 0.15
+    exploration_factor = 0.08
 
     n_episodes = 10000
     batch_size = 50

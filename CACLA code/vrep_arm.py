@@ -46,12 +46,13 @@ class VrepArm(gym.Env):
         if "vrep.exe" not in r:
             path_to_vrep = "C:/Program Files/V-REP3/"
             vrep_launcher = "v_repLauncher.exe"
-            path_to_scene = "C:/Users/Jonathan/Documents/School/Project_Farkas/Test/main_scene.ttt"
+            path_to_scene = "/".join(__file__.split("\\")[:-2]) + "/Scenes"
+            scene_name = "main_scene.ttt"
 
             curr_dir = os.getcwd()
 
             os.chdir(path_to_vrep)
-            os.popen(" ".join([vrep_launcher, path_to_scene]))
+            os.popen(" ".join([vrep_launcher, "/".join([path_to_scene, scene_name])]))
             os.chdir(curr_dir)
 
         # connect to v-rep
@@ -73,9 +74,9 @@ class VrepArm(gym.Env):
         # reset object
         alpha = 2 * np.pi * np.random.random()
         r = np.random.uniform(0.10, 0.25)
-        x = abs(r * np.cos(alpha))
+        x = r * np.cos(alpha)
         y = abs(r * np.sin(alpha))
-        z = 0.0125
+        z = np.random.uniform(0.0125, 0.1)
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_oneshot)
         self.object_position = np.array([x, y, z])
         self.iteration_n = 0
