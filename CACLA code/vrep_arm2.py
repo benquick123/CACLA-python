@@ -15,9 +15,10 @@ class VrepArm(gym.Env):
         _, self.armHandle = vrep.simxGetObjectHandle(self.clientID, 'AL5D_base', vrep.simx_opmode_blocking)
         _, self.objectHandle = vrep.simxGetObjectHandle(self.clientID, 'AL5D_target', vrep.simx_opmode_blocking)
         _, self.tip = vrep.simxGetObjectHandle(self.clientID, 'AL5D_tip', vrep.simx_opmode_blocking)
+        _, self.lfinger = vrep.simxGetObjectHandle(self.clientID, 'AL5D_joint_finger_l', vrep.simx_opmode_blocking)
+        _, self.rfinger = vrep.simxGetObjectHandle(self.clientID, 'AL5D_joint_finger_r', vrep.simx_opmode_blocking)
 
-        joint_names = ["AL5D_joint1", "AL5D_joint2", "AL5D_joint3",
-                       "AL5D_joint4", "AL5D_joint5"]
+        joint_names = ["AL5D_joint1", "AL5D_joint2", "AL5D_joint3", "AL5D_joint4", "AL5D_joint5"]
         self.joint_handles = []
         for joint_name in joint_names:
             _, joint_handle = vrep.simxGetObjectHandle(self.clientID, joint_name, vrep.simx_opmode_blocking)
@@ -144,6 +145,14 @@ class VrepArm(gym.Env):
 
         self.last_joint_positions = np.array(joint_positions)
         return self.last_joint_positions
+
+    def gripper(self, gripper_is_open):
+        if gripper_is_open:
+            vrep.simxSetJointTargetPosition(self.clientID, self.rfinger, 0.0125, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointTargetPosition(self.clientID, self.lfinger, 0.0125, vrep.simx_opmode_oneshot)
+        else:
+            vrep.simxSetJointTargetPosition(self.clientID, self.rfinger, 0, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointTargetPosition(self.clientID, self.lfinger, 0, vrep.simx_opmode_oneshot)
 
     def get_distance(self):
         _, object_position = vrep.simxGetObjectPosition(self.clientID, self.objectHandle, -1, vrep.simx_opmode_blocking)
