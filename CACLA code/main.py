@@ -2,19 +2,19 @@ import gym
 import numpy as np
 import time
 from cacla import Cacla
-from utils import Logger, Scaler
+from utils import Logger
 from datetime import datetime
 import pickle
 import copy
-import vrep_arm as arm
+import vrep_arm2 as arm
 
-env_name = "V-rep_ARM"
+env_name = "V-rep_AL5D"
 # env_name = "Reacher-v2"
 now = datetime.utcnow().strftime("%b-%d_%H.%M.%S")  # create unique directories
 logger = None
 
 
-def run_episode(model, scaler, animate=False):
+def run_episode(model, animate=False):
     """
     The core of data collection.
     For each movement (until the variable done == True) calculates value function at time T0 and T1,
@@ -35,13 +35,15 @@ def run_episode(model, scaler, animate=False):
 
         V0 = model.critic.predict(np.array([observation0]))
         A0 = model.actor.predict(np.array([observation0]))
-        a0 = [model.sample(A0[0], model.exploration_factor)]
+        a0 = model.sample(A0[0], model.exploration_factor)
+        a0 = [a0]
         # print("EXPLORING ACTION", a0)
 
         joint_positions0 = model.env.get_joint_positions()
         # print("BEFORE STEP joint positions", joint_positions0.tolist())
         # env_state0 = copy.deepcopy(model.env)
-        observation1, reward, done, info = model.env.step(a0[0], absolute=True)
+        observation1, reward, done, info = model.env.step(a0[0])
+        a0 = info["actual_action"]
         # print("AFTER STEP observation, reward", observation1.tolist(), reward)
         # observation_unscaled = np.array(observation1)
         # observation1 = (observation1 - offset) * scale
@@ -77,7 +79,7 @@ def run_episode(model, scaler, animate=False):
     return trajectory
 
 
-def run_batch(model, scaler, batch_size, animate=False):
+def run_batch(model, batch_size, animate=False):
     """
     Accepts CACLA model, scaler and batch size. Runs number of episodes equal to batch_size.
     Logs the rewards and at the end returns all traversed trajectories.
@@ -86,13 +88,11 @@ def run_batch(model, scaler, batch_size, animate=False):
     total_steps = 0
 
     for i in range(batch_size):
-        trajectory = run_episode(model, scaler, animate=animate)
+        trajectory = run_episode(model, animate=animate)
         total_steps += len(trajectory)
 
         trajectories.append(trajectory)
 
-    # unscaled = np.array([t["observation_unscaled"] for trajectory in trajectories for t in trajectory])
-    # scaler.update(unscaled)
     logger.log({"_MeanReward": np.mean([t["reward"] for trajectory in trajectories for t in trajectory]),
                 # "_MeanReward": np.mean([np.sum([t["reward"] for t in trajectory]) for trajectory in trajectories]),
                 "Steps": total_steps})
@@ -145,37 +145,18 @@ def train(model, n_episodes, batch_size, animate=False):
     Trains the actor and critic for number of episodes.
     """
 
-    # this is inspired by some other code I found and didn't produce better results.
-    # algorithm was also tested without this.
-    scaler = Scaler(model.input_dim)
-    # model.env.reset()
-    # model.env.step(np.array([0] * model.env.action_space.shape[0]))
-
-    # run_batch(model, scaler, 5)                         # initialize scaler
     episode = 0
+    best_reward = 0
     while episode < n_episodes:
         # compute trajectories, that CACLA will use to train critic and actor.
-        # batch_size was usually 1, but other batch sizes were also tested.
-        trajectories = run_batch(model, scaler, batch_size, animate)
+        trajectories = run_batch(model, batch_size, animate)
         episode += batch_size
 
-        # THIS IS CODE FOR OLD CACLA LEARNING. SHOULD STAY COMMENTED.
-        # change collected trajectories' data structure into something that Keras accepts.
-        # x = np.array([t["observation0"] for trajectory in trajectories for t in trajectory])
-        # y_critic = np.array([(t["reward"] + model.gamma * t["V1"]) for trajectory in trajectories for t in trajectory])
-        # train critic.
-        # model.critic.fit(x, y_critic, batch_size=batch_size, verbose=0)
-
-        # get deltas and choose subset of values that correspond to delta > 0 (learning rule for actor).
-        # change collected trajectories' data structure into something that Keras accepts again.
-        # deltas = np.array([t["delta"] for trajectory in trajectories for t in trajectory])
-        # x = x[deltas > 0]
-        # y_actor = np.array([t["a0"] for trajectory in trajectories for t in trajectory])[deltas > 0]
-        # train actor.
-        # model.actor.fit(x, y_actor, batch_size=batch_size, verbose=0)
-
-        # save loggint data
-        log_batch_stats(trajectories, episode, model.alpha, model.beta, model.exploration_factor)
+        # save logging data
+        d = log_batch_stats(trajectories, episode, model.alpha, model.beta, model.exploration_factor)
+        if d["_mean_reward"] >= best_reward:
+            best_reward = d["_mean_reward"]
+            pickle.dump(model, open(logger.path + "/model.pickle", "wb"))
         logger.write(display=True)
 
         # update learning and exploration rates for the algorithm.
@@ -183,8 +164,8 @@ def train(model, n_episodes, batch_size, animate=False):
         exploration_decay = (n_episodes - episode) / (n_episodes - episode + batch_size)
         model.update_exploration(exploration_decay)
 
+    pickle.dump(model, open(logger.path + "/model_final.pickle", "wb"))
     logger.close()
-    pickle.dump(model, open(logger.path + "/model.pickle", "wb"))
 
 
 def test(model, n):
@@ -198,13 +179,13 @@ def test(model, n):
             model.env.render()
             action = model.actor.predict(np.array([observation]))
 
-            observation, reward, done, info = model.env.step(action[0], absolute=True)
+            observation, reward, done, info = model.env.step(action[0])
             print("iteration:", i, "reward:", reward, "distance:", info["distance"], "done:", done)
         time.sleep(3)
 
 
 if __name__ == "__main__":
-    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/Test/log-files/V-rep_ARM/Dec-19_02.38.42/model.pickle", "rb"))
+    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D/Dec-28_12.09.03/model.pickle", "rb"))
     # test(cacla, 20)
     # exit()
 
@@ -213,12 +194,13 @@ if __name__ == "__main__":
 
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.shape[0]
-    alpha = 0.0005  # learning rate for actor
-    beta = 0.0005  # learning rate for critic
+    alpha = 0.0003  # learning rate for actor
+    beta = 0.0007  # learning rate for critic
+    beta = 0.0007  # learning rate for critic
     lr_decay = 1.0   # lr decay
     exploration_decay = 0.997   # exploration decay
     gamma = 0.0  # discount factor
-    exploration_factor = 0.08
+    exploration_factor = 0.1
 
     n_episodes = 10000
     batch_size = 50

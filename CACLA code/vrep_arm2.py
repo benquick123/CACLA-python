@@ -25,8 +25,8 @@ class VrepArm(gym.Env):
 
         # initialize necessary variables
         self.reward_range = (-1.0, 1.0)
-        self.joint_restrictions = np.array([[-180.0, 180.0], [-45.0, 90.0], [0.0, 160.0],
-                                            [-90.0, 90.0], [-180.0, 180.0]])
+        self.joint_restrictions = np.array([[-179.0, 179.0], [-45.0, 90.0], [0.0, 160.0],
+                                            [-90.0, 90.0], [-179.0, 179.0]])
 
         low = np.array([-1.0] * len(self.joint_restrictions))
         high = np.array([1.0] * len(self.joint_restrictions))
@@ -47,7 +47,7 @@ class VrepArm(gym.Env):
             path_to_vrep = "C:/Program Files/V-REP3/"
             vrep_launcher = "v_repLauncher.exe"
             path_to_scene = "/".join(__file__.split("\\")[:-2]) + "/Scenes"
-            scene_name = "main_scene.ttt"
+            scene_name = "al5d_scene_vertical.ttt"
 
             curr_dir = os.getcwd()
 
@@ -73,7 +73,7 @@ class VrepArm(gym.Env):
 
         # reset object
         alpha = 2 * np.pi * np.random.random()
-        r = np.random.uniform(0.10, 0.25)
+        r = np.random.uniform(0.15, 0.30)
         x = r * np.cos(alpha)
         y = abs(r * np.sin(alpha))
         z = np.random.uniform(0.0125, 0.1)
@@ -94,9 +94,13 @@ class VrepArm(gym.Env):
         # move joints first
         if absolute:
             joint_positions1 = action
+            actual_action = action
         else:
             joint_positions0 = self.get_joint_positions()
             joint_positions1 = joint_positions0 + action
+            joint_positions1[joint_positions1 > 1.0] = 1.0
+            joint_positions1[joint_positions1 < -1.0] = -1.0
+            actual_action = [joint_positions1 - joint_positions0]
 
         self.set_joint_positions(joint_positions1)
         self.iteration_n += 1
@@ -110,14 +114,16 @@ class VrepArm(gym.Env):
 
         done = True if distance < 0.01 or self.iteration_n > 50 else False
 
-        info = {"distance": distance}
+        info = {"distance": distance, "new_state": joint_positions1, "actual_action": actual_action}
 
         return observation, reward, done, info
 
     def set_joint_positions(self, joint_positions):
         self.last_joint_positions = np.array(joint_positions)
         for joint_handle, joint_position, joint_restriction in zip(self.joint_handles, joint_positions, self.joint_restrictions):
-            joint_position = joint_position * (joint_restriction[1] / 180.0) * np.pi
+            old_joint_range = self.action_space.high[0] - self.action_space.low[0]
+            new_joint_range = (joint_restriction[1] / 180.0) * np.pi - (joint_restriction[0] / 180.0) * np.pi
+            joint_position = (((joint_position - self.action_space.low[0]) * new_joint_range) / old_joint_range) + (joint_restriction[0] / 180.0) * np.pi
             if self.simulation:
                 vrep.simxSetJointTargetPosition(self.clientID, joint_handle, joint_position, vrep.simx_opmode_oneshot)
             else:
@@ -131,7 +137,9 @@ class VrepArm(gym.Env):
         joint_positions = []
         for joint_handle, joint_restriction in zip(self.joint_handles, self.joint_restrictions):
             _, joint_position = vrep.simxGetJointPosition(self.clientID, joint_handle, vrep.simx_opmode_blocking)
-            joint_position = (joint_position * 180.0) / (joint_restriction[1] * np.pi)
+            old_joint_range = (joint_restriction[1] / 180.0) * np.pi - (joint_restriction[0] / 180.0) * np.pi
+            new_joint_range = self.action_space.high[0] - self.action_space.low[0]
+            joint_position = (((joint_position - (joint_restriction[0] / 180.0) * np.pi) * new_joint_range) / old_joint_range) + self.action_space.low[0]
             joint_positions.append(joint_position)
 
         self.last_joint_positions = np.array(joint_positions)
@@ -148,3 +156,29 @@ class VrepArm(gym.Env):
         gym.Env.close(self)
         vrep.simxStopSimulation(self.clientID, vrep.simx_opmode_oneshot)
         os.system("TASKKILL /F /IM vrep.exe")
+
+
+if __name__ == "__main__":
+    arm = VrepArm()
+    obs = arm.reset()
+    obv, _, _, _ = arm.step([0.0, 0.1, 0.1, -0.1, 0.1])
+    print("obv", obv)
+    print("last", arm.get_joint_positions())
+    arm.last_joint_positions = None
+    print("when none", arm.get_joint_positions())
+    print()
+
+    obv, _, _, _ = arm.step([0.0, 0.1, 0.1, -0.1, 0.1])
+    print("obv", obv)
+    print("last", arm.get_joint_positions())
+    arm.last_joint_positions = None
+    print("when none", arm.get_joint_positions())
+    print()
+
+    obv, _, _, _ = arm.step(-np.array([0.0, 0.1, 0.1, -0.1, 0.1]))
+    print("obv", obv)
+    print("last", arm.get_joint_positions())
+    arm.last_joint_positions = None
+    print("when none", arm.get_joint_positions())
+    print()
+    # print(arm.get_distance())
