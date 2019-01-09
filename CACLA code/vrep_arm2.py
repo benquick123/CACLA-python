@@ -28,6 +28,7 @@ class VrepArm(gym.Env):
         self.reward_range = (-1.0, 1.0)
         self.joint_restrictions = np.array([[-179.0, 179.0], [-45.0, 90.0], [0.0, 160.0],
                                             [-90.0, 90.0], [-179.0, 179.0]])
+        self.movement_restriction = 1.0
 
         low = np.array([-1.0] * len(self.joint_restrictions))
         high = np.array([1.0] * len(self.joint_restrictions))
@@ -74,10 +75,10 @@ class VrepArm(gym.Env):
 
         # reset object
         alpha = 2 * np.pi * np.random.random()
-        r = np.random.uniform(0.15, 0.30)
+        r = np.random.uniform(0.10, 0.20)
         x = r * np.cos(alpha)
         y = abs(r * np.sin(alpha))
-        z = np.random.uniform(0.0125, 0.1)
+        z = 0.0125          # np.random.uniform(0.0125, 0.1)
         vrep.simxSetObjectPosition(self.clientID, self.objectHandle, -1, (x, y, z), vrep.simx_opmode_oneshot)
         self.object_position = np.array([x, y, z])
         self.iteration_n = 0
@@ -95,10 +96,10 @@ class VrepArm(gym.Env):
         # move joints first
         if absolute:
             joint_positions1 = action
-            actual_action = action
+            actual_action = np.array([action])
         else:
             joint_positions0 = self.get_joint_positions()
-            joint_positions1 = joint_positions0 + action
+            joint_positions1 = joint_positions0 + (action * np.array([self.movement_restriction]))
             joint_positions1[joint_positions1 > 1.0] = 1.0
             joint_positions1[joint_positions1 < -1.0] = -1.0
             actual_action = [joint_positions1 - joint_positions0]
@@ -115,7 +116,7 @@ class VrepArm(gym.Env):
 
         done = True if distance < 0.01 or self.iteration_n > 50 else False
 
-        info = {"distance": distance, "new_state": joint_positions1, "actual_action": actual_action}
+        info = {"distance": distance, "actual_action": actual_action}
 
         return observation, reward, done, info
 
@@ -124,6 +125,7 @@ class VrepArm(gym.Env):
         for joint_handle, joint_position, joint_restriction in zip(self.joint_handles, joint_positions, self.joint_restrictions):
             old_joint_range = self.action_space.high[0] - self.action_space.low[0]
             new_joint_range = (joint_restriction[1] / 180.0) * np.pi - (joint_restriction[0] / 180.0) * np.pi
+            # new_joint_range = (self.movement_restriction[1] / 180.0) * np.pi - (self.movement_restriction[0] / 180.0) * np.pi
             joint_position = (((joint_position - self.action_space.low[0]) * new_joint_range) / old_joint_range) + (joint_restriction[0] / 180.0) * np.pi
             if self.simulation:
                 vrep.simxSetJointTargetPosition(self.clientID, joint_handle, joint_position, vrep.simx_opmode_oneshot)

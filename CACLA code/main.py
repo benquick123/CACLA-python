@@ -14,7 +14,7 @@ now = datetime.utcnow().strftime("%b-%d_%H.%M.%S")  # create unique directories
 logger = None
 
 
-def run_episode(model, animate=False):
+def run_episode(model, episode, animate=False):
     """
     The core of data collection.
     For each movement (until the variable done == True) calculates value function at time T0 and T1,
@@ -26,6 +26,7 @@ def run_episode(model, animate=False):
 
     trajectory = []
     observation0 = model.env.reset()
+    reward0 = -1.0
     # iteration_n = 0
     # print("RESET observation", observation0)
     # scale, offset = scaler.get()
@@ -48,7 +49,12 @@ def run_episode(model, animate=False):
         # observation_unscaled = np.array(observation1)
         # observation1 = (observation1 - offset) * scale
         V1 = model.critic.predict(np.array([observation1]))
-        delta = reward + model.gamma * V1 - V0
+        if episode < 3000:
+            delta = np.array([[reward - reward0]])
+        elif 3000 < episode < 6000:
+            delta = V1 - V0
+        else:
+            delta = reward + model.gamma * V1 - V0
         # print("DELTA", delta)
 
         # fit critic
@@ -59,6 +65,7 @@ def run_episode(model, animate=False):
             # if delta is positive, fit actor
             model.actor.fit(np.array([observation0]), [a0], batch_size=1, verbose=0)
             observation0 = observation1
+            reward0 = reward
             # print("FITTING ACTOR; SEE IF OBSERVATION IS CHANGED")
         else:
             # otherwise set things to how they were before model.env.step().
@@ -79,7 +86,7 @@ def run_episode(model, animate=False):
     return trajectory
 
 
-def run_batch(model, batch_size, animate=False):
+def run_batch(model, batch_size, episode, animate=False):
     """
     Accepts CACLA model, scaler and batch size. Runs number of episodes equal to batch_size.
     Logs the rewards and at the end returns all traversed trajectories.
@@ -88,7 +95,7 @@ def run_batch(model, batch_size, animate=False):
     total_steps = 0
 
     for i in range(batch_size):
-        trajectory = run_episode(model, animate=animate)
+        trajectory = run_episode(model, episode, animate=animate)
         total_steps += len(trajectory)
 
         trajectories.append(trajectory)
@@ -149,7 +156,7 @@ def train(model, n_episodes, batch_size, animate=False):
     best_reward = 0
     while episode < n_episodes:
         # compute trajectories, that CACLA will use to train critic and actor.
-        trajectories = run_batch(model, batch_size, animate)
+        trajectories = run_batch(model, batch_size, episode, animate)
         episode += batch_size
 
         # save logging data
@@ -161,8 +168,9 @@ def train(model, n_episodes, batch_size, animate=False):
 
         # update learning and exploration rates for the algorithm.
         model.update_lr(model.lr_decay)
-        exploration_decay = (n_episodes - episode) / (n_episodes - episode + batch_size)
-        model.update_exploration(exploration_decay)
+        # exploration_decay = (n_episodes - episode) / (n_episodes - episode + batch_size)
+        # model.update_exploration(exploration_decay)
+        model.update_exploration()
 
     pickle.dump(model, open(logger.path + "/model_final.pickle", "wb"))
     logger.close()
@@ -185,7 +193,8 @@ def test(model, n):
 
 
 if __name__ == "__main__":
-    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D/Dec-28_12.09.03/model.pickle", "rb"))
+    # cacla = pickle.load(open("log-files/V-rep_AL5D/Jan-07_11.52.47/model_final.pickle", "rb"))
+    # cacla.simulation = True
     # test(cacla, 20)
     # exit()
 
@@ -194,13 +203,12 @@ if __name__ == "__main__":
 
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.shape[0]
-    alpha = 0.0003  # learning rate for actor
-    beta = 0.0007  # learning rate for critic
-    beta = 0.0007  # learning rate for critic
+    alpha = 0.0005  # learning rate for actor
+    beta = 0.0005  # learning rate for critic
     lr_decay = 1.0   # lr decay
     exploration_decay = 0.997   # exploration decay
     gamma = 0.0  # discount factor
-    exploration_factor = 0.1
+    exploration_factor = 0.15
 
     n_episodes = 10000
     batch_size = 50

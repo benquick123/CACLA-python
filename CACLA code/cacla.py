@@ -37,7 +37,9 @@ class Cacla:
         self.alpha *= lr_decay
         self.beta *= lr_decay
 
-    def update_exploration(self, exploration_decay):
+    def update_exploration(self, exploration_decay=None):
+        if exploration_decay is None:
+            exploration_decay = self.exploration_decay
         self.exploration_factor *= exploration_decay
 
     @staticmethod
