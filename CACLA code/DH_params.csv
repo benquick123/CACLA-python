@@ -1,0 +1,36 @@
+# Denavit-Hartenberg parameters
+# Between 'AL5D_joint1' and 'AL5D_joint2':
+self.d1 = 0.0710
+self.theta1 = 90.0
+self.a1 = 0.0120
+self.alpha1 = -90.0
+
+# Between 'AL5D_joint2' and 'AL5D_joint3':
+self.d2 = 0.0000
+self.theta2 = -90.0
+self.a2 = 0.1464
+self.alpha2 = 0.0
+
+# Between 'AL5D_joint3' and 'AL5D_joint4':
+self.d3 = 0.0000
+self.theta3 = 0.0
+self.a3 = 0.1809
+self.alpha3 = 0.0
+
+# Between 'AL5D_joint4' and 'AL5D_joint5':
+self.d4 = -0.0036
+self.theta4 = -90.0
+self.a4 = 0.0004
+self.alpha4 = -90.0
+
+# Between 'AL5D_joint5' and 'AL5D_joint_finger_l':
+self.d5 = 0.0834
+self.theta5 = -0.0
+self.a5 = 0.0000
+self.alpha5 = 90.0
+
+# Between 'AL5D_joint5' and 'AL5D_joint_finger_r':
+self.d6 = 0.0835
+self.theta6 = 180.0
+self.a6 = 0.0000
+self.alpha6 = 90.0

@@ -6,11 +6,10 @@ from utils import Logger
 from datetime import datetime
 import pickle
 import copy
-import vrep_arm2 as arm
+import vrep_arm3 as arm
 
-env_name = "V-rep_AL5D"
-# env_name = "Reacher-v2"
-now = datetime.utcnow().strftime("%b-%d_%H.%M.%S")  # create unique directories
+env_name = "V-rep_AL5D_no_sim"
+now = datetime.utcnow().strftime("%b-%d_%H.%M.%S")  # for unique directories
 logger = None
 
 
@@ -26,33 +25,28 @@ def run_episode(model, episode, animate=False):
 
     trajectory = []
     observation0 = model.env.reset()
-    # reward0 = -1.0
     # iteration_n = 0
     # print("RESET observation", observation0)
     # scale, offset = scaler.get()
     while not done:
-        if animate:
+        if model.env.simulation:
             model.env.render()
 
         V0 = model.critic.predict(np.array([observation0]))
         A0 = model.actor.predict(np.array([observation0]))
-        # _exploration_factor = 0.05 * model.exploration_factor + model.exploration_factor * (model.env.get_distance() / model.env.max_distance)
+
+        joint_positions0 = model.env.get_joint_positions()
+        # print("BEFORE STEP joint positions", joint_positions0.tolist())
+
         a0 = model.sample(A0[0], model.exploration_factor)
         a0 = [a0]
         # print("EXPLORING ACTION", a0)
 
-        joint_positions0 = model.env.get_joint_positions()
-        # print("BEFORE STEP joint positions", joint_positions0.tolist())
         # env_state0 = copy.deepcopy(model.env)
-        observation1, reward, done, info = model.env.step(a0[0], absolute=True)
+        observation1, reward, done, info = model.env.step(a0[0])
         a0 = info["actual_action"]
         # print("AFTER STEP observation, reward", observation1.tolist(), reward)
         V1 = model.critic.predict(np.array([observation1]))
-        # if episode < 3000:
-        #     delta = np.array([[reward - reward0]])
-        # elif 3000 < episode < 6000:
-        #     delta = V1 - V0
-        # else:
         delta = reward + model.gamma * V1 - V0
         # print("DELTA", delta)
 
@@ -64,7 +58,6 @@ def run_episode(model, episode, animate=False):
             # if delta is positive, fit actor
             model.actor.fit(np.array([observation0]), [a0], batch_size=1, verbose=0)
             observation0 = observation1
-            # reward0 = reward
             # print("FITTING ACTOR; SEE IF OBSERVATION IS CHANGED")
         else:
             # otherwise set things to how they were before model.env.step().
@@ -99,9 +92,14 @@ def run_batch(model, batch_size, episode, animate=False):
 
         trajectories.append(trajectory)
 
+    last_rewards = [trajectory[-1]["reward"] for trajectory in trajectories]
     logger.log({"_MeanReward": np.mean([t["reward"] for trajectory in trajectories for t in trajectory]),
                 # "_MeanReward": np.mean([np.sum([t["reward"] for t in trajectory]) for trajectory in trajectories]),
-                "Steps": total_steps})
+                "Steps": total_steps,
+                "mean_last_reward": np.mean(last_rewards),
+                "_std_last_reward": np.std(last_rewards),
+                "_min_last_reward": np.min(last_rewards),
+                "_max_last_reward": np.max(last_rewards)})
     return trajectories
 
 
@@ -167,8 +165,9 @@ def train(model, n_episodes, batch_size, animate=False):
 
         # update learning and exploration rates for the algorithm.
         model.update_lr(model.lr_decay)
-        exploration_decay = (n_episodes - episode) / (n_episodes - episode + batch_size)
-        model.update_exploration(exploration_decay)
+        # if model.exploration_factor < 0.04:
+        # exploration_decay = (n_episodes - episode) / (n_episodes - episode + batch_size)
+        model.update_exploration()
         # model.update_exploration()
 
     pickle.dump(model, open(logger.path + "/model_final.pickle", "wb"))
@@ -177,39 +176,41 @@ def train(model, n_episodes, batch_size, animate=False):
 
 def test(model, n):
     # model.env = gym.make(env_name)
-    model.env = arm.VrepArm()
-
+    success = 0
     for i in range(n):
         observation = model.env.reset()
         done = False
         while not done:
-            model.env.render()
+            if model.env.simulation:
+                model.env.render()
             action = model.actor.predict(np.array([observation]))
 
-            observation, reward, done, info = model.env.step(action[0], absolute=True)
+            observation, reward, done, info = model.env.step(action[0])
             print("iteration:", i, "reward:", reward, "distance:", info["distance"], "done:", done)
+            if info["distance"] < 0.01:
+                success += 1
         time.sleep(3)
+    print("success rate:", success / n)
 
 
 if __name__ == "__main__":
-    # cacla = pickle.load(open("log-files/V-rep_AL5D/Jan-07_11.52.47/model_final.pickle", "rb"))
-    # cacla.simulation = True
+    action_multiplier = 0.1
+    env = arm.VrepArm(action_multiplier=action_multiplier)
+    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D_no_sim/Jan-21_00.49.49/model_final.pickle", "rb"))
+    # cacla.env = env
     # test(cacla, 20)
     # exit()
 
-    # env = gym.make(env_name)
-    env = arm.VrepArm()
-
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.shape[0]
-    alpha = 0.0005  # learning rate for actor
+    alpha = 0.0001  # learning rate for actor
     beta = 0.0005  # learning rate for critic
     lr_decay = 1.0   # lr decay
-    exploration_decay = 0.997   # exploration decay
+    exploration_decay = 0.998   # exploration decay
     gamma = 0.0  # discount factor
-    exploration_factor = 0.1
+    exploration_factor = 0.2
 
-    n_episodes = 10000
+    n_episodes = 20000
     batch_size = 50
 
     logger = Logger(logname=env_name, now=now)
@@ -217,5 +218,6 @@ if __name__ == "__main__":
     cacla = Cacla(env, input_dim, output_dim, alpha, beta, gamma, lr_decay, exploration_decay, exploration_factor)
     train(cacla, n_episodes, batch_size)
     input("Continue?")
-
+    env = arm.VrepArm(simulation=True, action_multiplier=action_multiplier)
+    cacla.env = env
     test(cacla, 10)

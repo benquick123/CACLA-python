@@ -72,10 +72,10 @@ class Cacla:
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / input_dim))))
         # model.add(Dense(l2_size, activation="relu",
         #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
-        model.add(Dense(l3_size, activation="relu",
-                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
+        # model.add(Dense(l3_size, activation="relu",
+        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
         model.add(Dense(output_dim, activation="linear",
-                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l3_size))))
+                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
 
         adam = keras.optimizers.Adam(lr=learning_rate)
         model.compile(loss='mean_squared_error', optimizer=adam)
@@ -95,10 +95,10 @@ class Cacla:
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / input_dim))))
         # model.add(Dense(l2_size, activation="relu",
         #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
-        model.add(Dense(l3_size, activation="relu",
-                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
+        # model.add(Dense(l3_size, activation="relu",
+        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
         model.add(Dense(output_dim, activation='linear',
-                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l3_size))))
+                        kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
 
         adam = keras.optimizers.Adam(lr=learning_rate)
         model.compile(loss='mean_squared_error', optimizer=adam)
