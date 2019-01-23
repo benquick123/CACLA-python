@@ -191,11 +191,12 @@ def test(model, n):
             print("iteration:", i, "reward:", reward, "distance:", info["distance"], "done:", done)
             if info["distance"] < 0.01:
                 success += 1
+        model.env.render()
+        time.sleep(3)
         print(model.env.get_tip_position())
         _, tip = vrep.simxGetObjectHandle(model.env.clientID, 'AL5D_tip', vrep.simx_opmode_blocking)
         _, real_tip = vrep.simxGetObjectPosition(model.env.clientID, tip, -1, vrep.simx_opmode_blocking)
         print(real_tip)
-        time.sleep(3)
     print("success rate:", success / n)
 
 
