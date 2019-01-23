@@ -2,6 +2,7 @@
 .vscode/*
 CACLA code/log-files/*
 CACLA code/__pycache__/*
+!CACLA code/log-files/V-rep_AL5D_no_sim/Jan-22_15.45.30_best_sim
 Papers/*
 Report/*
 some_bachelor_thesis/*
