@@ -1,1 +1,7 @@
 *.dll
+.vscode/*
+CACLA code/log-files/*
+CACLA code/__pycache__/*
+Papers/*
+Report/*
+some_bachelor_thesis/*

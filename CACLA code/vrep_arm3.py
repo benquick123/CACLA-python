@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import gym.spaces
 from skinematics import rotmat
+import time
 
 
 class VrepArm(gym.Env):
@@ -88,7 +89,7 @@ class VrepArm(gym.Env):
     def reset(self):
         # reset arm
         self.params = np.array(self.init_params, copy=True)
-        self.set_joint_positions([0.0, 0.0, -1.0, 0.0, 0.0])
+        self.set_joint_positions([0.0, 0.0, 0.0, 0.0, 0.0])
 
         # reset object
         alpha = 2 * np.pi * np.random.random()
@@ -226,6 +227,9 @@ if __name__ == "__main__":
         real_tip = np.array(real_tip)
         d = np.sqrt(np.sum(np.power(DH_tip - real_tip, 2)))
         dist.append(d)
+        print(DH_tip)
+        print(real_tip)
+        time.sleep(3)
 
     print("mean:", np.mean(dist))
     print("min:", np.min(dist))

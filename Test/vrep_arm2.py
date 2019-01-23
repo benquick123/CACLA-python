@@ -84,7 +84,7 @@ class VrepArm(gym.Env):
         self.object_position = np.array([x, y, z])
         self.iteration_n = 0
 
-        observation = np.hstack((0.0, self.object_position, self.get_joint_positions()))
+        observation = np.hstack((self.object_position, self.get_joint_positions()))
 
         # print("Environment reset.")
         return np.array(observation)
@@ -113,7 +113,7 @@ class VrepArm(gym.Env):
         self.iteration_n += 1
 
         # calculate return values then
-        observation = np.hstack((1e-3 * self.iteration_n, self.object_position, self.get_joint_positions()))
+        observation = np.hstack((self.object_position, self.get_joint_positions()))
 
         distance = self.get_distance()
         rd = 1 - 2 * (distance / self.max_distance)
@@ -138,7 +138,7 @@ class VrepArm(gym.Env):
             joint_positions1[joint_positions1 > 1.0] = 1.0
             joint_positions1[joint_positions1 < -1.0] = -1.0
 
-        observation = np.hstack((1e-3 * self.iteration_n, self.object_position, np.array(joint_positions1)))
+        observation = np.hstack((self.object_position, np.array(joint_positions1)))
         return observation
 
     def set_joint_positions(self, joint_positions):

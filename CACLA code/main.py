@@ -7,6 +7,8 @@ from datetime import datetime
 import pickle
 import copy
 import vrep_arm3 as arm
+import vrep
+import serial
 
 env_name = "V-rep_AL5D_no_sim"
 now = datetime.utcnow().strftime("%b-%d_%H.%M.%S")  # for unique directories
@@ -86,7 +88,7 @@ def run_batch(model, batch_size, episode, animate=False):
     trajectories = []
     total_steps = 0
 
-    for i in range(batch_size):
+    for _ in range(batch_size):
         trajectory = run_episode(model, episode, animate=animate)
         total_steps += len(trajectory)
 
@@ -189,26 +191,64 @@ def test(model, n):
             print("iteration:", i, "reward:", reward, "distance:", info["distance"], "done:", done)
             if info["distance"] < 0.01:
                 success += 1
+        print(model.env.get_tip_position())
+        _, tip = vrep.simxGetObjectHandle(model.env.clientID, 'AL5D_tip', vrep.simx_opmode_blocking)
+        _, real_tip = vrep.simxGetObjectPosition(model.env.clientID, tip, -1, vrep.simx_opmode_blocking)
+        print(real_tip)
         time.sleep(3)
     print("success rate:", success / n)
 
 
+"""def real_test(model):
+    # new_restrictions = [[-90, 90], [-60, 0], [0, 100], [-90, 45], [-90, 90]]
+    new_values = [[500, 2500], [1000, 1500], [950, 2000], [600, 1900], [600, 2400]]
+    additional_restrictions = [[-0.5, 0.5], [-2/3, 0.0], [0.0, 0.625], [-1, 0.5], [-0.5, 0.5]]
+    conn = serial.Serial("COM3", 115200)
+    cr = bytes("\r", "ascii")
+
+    def generate_action(action):
+        speed = "S500"
+        for rest, a in zip(additional_restrictions, action[0]):
+            print(a)
+            if a < rest[0]:
+                a = rest[0]
+            elif a > rest[1]:
+                a = rest[1]
+            
+
+    # initialize
+    init = bytes("#0 P1500 #1 P1500 #2 P1500 #3 P1500 #4 P1500", "ascii")
+    conn.write(init + cr)
+
+    done = False
+    observation = cacla.env.reset()
+    observation[0] = 0.15
+    observation[1] = 0.2
+    observation[2] = 0.02
+    for s in range(50):
+        action = model.actor.predict(np.array([observation]))
+        model.env.step(action[0])
+        serial_action = generate_action(action)
+        exit()
+"""
+
+
 if __name__ == "__main__":
     action_multiplier = 0.1
-    env = arm.VrepArm(action_multiplier=action_multiplier)
-    # cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D_no_sim/Jan-21_00.49.49/model_final.pickle", "rb"))
-    # cacla.env = env
-    # test(cacla, 20)
-    # exit()
+    env = arm.VrepArm(simulation=True, action_multiplier=action_multiplier)
+    cacla = pickle.load(open("log-files/V-rep_AL5D_no_sim/Jan-22_15.45.30_best_sim/model_final.pickle", "rb"))
+    cacla.env = env
+    test(cacla, 20)
+    exit()
 
     input_dim = env.observation_space.shape[0]
     output_dim = env.action_space.shape[0]
-    alpha = 0.0001  # learning rate for actor
-    beta = 0.0005  # learning rate for critic
-    lr_decay = 1.0   # lr decay
-    exploration_decay = 0.998   # exploration decay
+    alpha = 0.0007  # learning rate for actor
+    beta = 0.001  # learning rate for critic
+    lr_decay = 0.997   # lr decay
+    exploration_decay = 0.997   # exploration decay
     gamma = 0.0  # discount factor
-    exploration_factor = 0.2
+    exploration_factor = 0.15
 
     n_episodes = 20000
     batch_size = 50

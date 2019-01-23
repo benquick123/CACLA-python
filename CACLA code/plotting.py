@@ -2,7 +2,7 @@ import vrep
 import pickle
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import vrep_arm2 as arm
+import vrep_arm3 as arm
 import numpy as np
 
 
@@ -16,11 +16,7 @@ def plot3D(x_pos, y_pos, z_pos, x_arm_pos, y_arm_pos, z_arm_pos):
 
     plt.show()
 
-
-if __name__ == "__main__":
-    clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
-    cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D/Jan-15_13.48.07_best_so_far/model.pickle", "rb"))
-
+def plot3D_reaches(cacla, clientID):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -50,3 +46,11 @@ if __name__ == "__main__":
     for i in range(n):
         ax.scatter(x_pos[i], y_pos[i], z_pos[i], alpha=distances[i], c=colors[i])
     plt.show()
+
+
+if __name__ == "__main__":
+    clientID = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
+    cacla = pickle.load(open("C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D/Jan-15_13.48.07_best_so_far/model.pickle", "rb"))
+    # plot3D_reaches(cacla, clientID)
+
+    
