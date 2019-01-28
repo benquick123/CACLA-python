@@ -10,6 +10,9 @@ from keras.layers import Dense
 
 class Cacla:
     def __init__(self, env, input_dim, output_dim, alpha, beta, gamma, lr_decay, exploration_decay, exploration_factor):
+        """
+        initializes CACLA reinforcement learning algorithm.
+        """
         self.env = env
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -21,12 +24,12 @@ class Cacla:
         self.alpha = alpha
         self.beta = beta
 
+        # creates neural networks.
         self.actor = self._create_actor(input_dim, output_dim, alpha)
         self.critic = self._create_critic(input_dim, 1, beta)
 
     def update_lr(self, lr_decay):
         """
-
         :param lr_decay: decay for both actor and critic
         changes learning rate for actor and critic based on lr_decay.
         """
@@ -60,20 +63,14 @@ class Cacla:
     @staticmethod
     def _create_actor(input_dim, output_dim, learning_rate):
         """
-        Creates actor. Uses 2 layers with number of neurons described in next 3 lines.
+        Creates actor. Uses 1 hidden layers with number of neurons 5 * input_dim (~40).
         initializes weights to some small value.
         """
         l1_size = 5 * input_dim
-        l3_size = 5 * output_dim
-        # l2_size = int(np.sqrt(l1_size * l3_size))
 
         model = Sequential()
         model.add(Dense(l1_size, input_dim=input_dim, activation="relu",
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / input_dim))))
-        # model.add(Dense(l2_size, activation="relu",
-        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
-        # model.add(Dense(l3_size, activation="relu",
-        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
         model.add(Dense(output_dim, activation="linear",
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
 
@@ -87,16 +84,10 @@ class Cacla:
         See self._create_actor.
         """
         l1_size = 5 * input_dim
-        l3_size = 5 * output_dim
-        # l2_size = int(np.sqrt(l1_size * l3_size))
 
         model = Sequential()
         model.add(Dense(l1_size, input_dim=input_dim, activation="relu",
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / input_dim))))
-        # model.add(Dense(l2_size, activation="relu",
-        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
-        # model.add(Dense(l3_size, activation="relu",
-        #                 kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
         model.add(Dense(output_dim, activation='linear',
                         kernel_initializer=keras.initializers.random_normal(0.0, np.sqrt(1 / l1_size))))
 

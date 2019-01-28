@@ -55,8 +55,8 @@ def df_plot(dfs, x, ys, ylim=None, legend_loc='best'):
 
 #%%
 # ENTER LIST OF LOG FILENAMES HERE:
-filepaths = ['C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D/Jan-15_13.48.07_best_V-rep/log.csv',
-             'C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D_no_sim/Jan-22_15.45.30_best_sim/log.csv']
+filepaths = ['C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D_no_sim/Jan-27_20.43.12/log.csv',
+             'C:/Users/Jonathan/Documents/School/Project_Farkas/CACLA code/log-files/V-rep_AL5D_no_sim/Jan-27_23.22.56/log.csv']
 dataframes = []
 names = []
 for filepath in filepaths:

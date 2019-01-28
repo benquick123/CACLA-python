@@ -18,7 +18,7 @@ class Logger(object):
             logname: name for log (e.g. 'Hopper-v1')
             now: unique sub-directory name (e.g. date/time string)
         """
-        self.path = "/".join(["log-files", logname, now])                      #os.path.join('log-files', logname, now)
+        self.path = "/".join(["log-files", logname, now])
         os.makedirs(self.path)
         filenames = ["main.py", "cacla.py", "utils.py", "vrep_arm3.py"]  # put copy of all relevant python files in log_dir
         for filename in filenames:     # for reference
